@@ -2926,7 +2926,9 @@ void win_init_size(void)
  */
 static tabpage_T *alloc_tabpage(void)
 {
+  static int last_tp_handle = 0;
   tabpage_T *tp = xcalloc(1, sizeof(tabpage_T));
+  tp->handle = ++last_tp_handle;
   handle_register_tabpage(tp);
 
   /* init t: variables */
@@ -3691,13 +3693,15 @@ static int last_win_id = 0;
  */
 static win_T *win_alloc(win_T *after, int hidden)
 {
-  /*
-   * allocate window structure and linesizes arrays
-   */
+  static int last_win_id = 0;
+
+  // allocate window structure and linesizes arrays
   win_T *new_wp = xcalloc(1, sizeof(win_T));
-  handle_register_window(new_wp);
   win_alloc_lines(new_wp);
   new_wp->w_id = ++last_win_id;
+
+  new_wp->handle = ++last_win_id;
+  handle_register_window(new_wp);
 
   /* init w: variables */
   new_wp->w_vars = dict_alloc();

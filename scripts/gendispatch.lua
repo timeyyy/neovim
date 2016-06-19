@@ -195,7 +195,7 @@ for i = 1, #functions do
       if rt:match('^Buffer$') or rt:match('^Window$') or rt:match('^Tabpage$') or rt:match('^Boolean$') then
         -- accept positive integers for Buffers, Windows and Tabpages
         output:write('\n  } else if (args.items['..(j - 1)..'].type == kObjectTypeInteger && args.items['..(j - 1)..'].data.integer > 0) {')
-        output:write('\n    '..converted..' = (unsigned)args.items['..(j - 1)..'].data.integer;')
+        output:write('\n    '..converted..' = (handle_T)args.items['..(j - 1)..'].data.integer;')
       end
       output:write('\n  } else {')
       output:write('\n    snprintf(error->msg, sizeof(error->msg), "Wrong type for argument '..j..', expecting '..param[1]..'");')
