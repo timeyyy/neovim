@@ -46,6 +46,7 @@ void remote_ui_disconnect(uint64_t channel_id)
 
 void ui_attach(uint64_t channel_id, Integer width, Integer height,
                Boolean enable_rgb, Error *err)
+    FUNC_API_NOEVAL
 {
   if (pmap_has(uint64_t)(connected_uis, channel_id)) {
     api_set_error(err, Exception, _("UI already attached for channel"));
@@ -94,6 +95,7 @@ void ui_attach(uint64_t channel_id, Integer width, Integer height,
 }
 
 void ui_detach(uint64_t channel_id, Error *err)
+    FUNC_API_NOEVAL
 {
   if (!pmap_has(uint64_t)(connected_uis, channel_id)) {
     api_set_error(err, Exception, _("UI is not attached for channel"));
@@ -103,6 +105,7 @@ void ui_detach(uint64_t channel_id, Error *err)
 
 Object ui_try_resize(uint64_t channel_id, Integer width,
                      Integer height, Error *err)
+    FUNC_API_NOEVAL
 {
   if (!pmap_has(uint64_t)(connected_uis, channel_id)) {
     api_set_error(err, Exception, _("UI is not attached for channel"));
