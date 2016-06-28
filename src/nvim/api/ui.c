@@ -44,8 +44,8 @@ void remote_ui_disconnect(uint64_t channel_id)
   xfree(ui);
 }
 
-void ui_attach(uint64_t channel_id, Integer width, Integer height,
-               Boolean enable_rgb, Error *err)
+void nvim_ui_attach(uint64_t channel_id, Integer width, Integer height,
+                    Boolean enable_rgb, Error *err)
     FUNC_API_NOEVAL
 {
   if (pmap_has(uint64_t)(connected_uis, channel_id)) {
@@ -94,7 +94,7 @@ void ui_attach(uint64_t channel_id, Integer width, Integer height,
   return;
 }
 
-void ui_detach(uint64_t channel_id, Error *err)
+void nvim_ui_detach(uint64_t channel_id, Error *err)
     FUNC_API_NOEVAL
 {
   if (!pmap_has(uint64_t)(connected_uis, channel_id)) {
@@ -103,8 +103,8 @@ void ui_detach(uint64_t channel_id, Error *err)
   remote_ui_disconnect(channel_id);
 }
 
-Object ui_try_resize(uint64_t channel_id, Integer width,
-                     Integer height, Error *err)
+Object nvim_ui_try_resize(uint64_t channel_id, Integer width,
+                          Integer height, Error *err)
     FUNC_API_NOEVAL
 {
   if (!pmap_has(uint64_t)(connected_uis, channel_id)) {

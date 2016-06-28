@@ -7,6 +7,7 @@ local ok, nvim_async, feed = helpers.ok, helpers.nvim_async, helpers.feed
 local os_name = helpers.os_name
 local meths = helpers.meths
 local funcs = helpers.funcs
+local request = helpers.request
 
 describe('vim_* functions', function()
   before_each(clear)
@@ -41,6 +42,10 @@ describe('vim_* functions', function()
       eq(1, nvim('eval',"matcharg(1) == ['', '']"))
       eq({'', ''}, nvim('eval','matcharg(1)'))
     end)
+
+    it('works under deprecated name', function()
+      eq(2, request("vim_eval", "1+1"))
+    end)
   end)
 
   describe('call_function', function()
@@ -67,9 +72,9 @@ describe('vim_* functions', function()
 
   describe('{get,set}_current_line', function()
     it('works', function()
-      eq('', nvim('get_current_line'))
-      nvim('set_current_line', 'abc')
-      eq('abc', nvim('get_current_line'))
+      eq('', request('vim_get_current_line'))
+      request('vim_set_current_line', 'abc')
+      eq('abc', request('vim_get_current_line'))
     end)
   end)
 
