@@ -3,6 +3,7 @@ mpack = require('mpack')
 local nvimsrcdir = arg[1]
 local autodir = arg[2]
 local metadata_file = arg[3]
+local funcs_file = arg[4]
 
 if nvimsrcdir == '--help' then
   print([[
@@ -22,9 +23,7 @@ local funcsfname = autodir .. '/funcs.generated.h'
 local gperfpipe = io.open(funcsfname .. '.gperf', 'w')
 
 local funcs = require('eval').funcs
-
 local metadata = mpack.unpack(io.open(arg[3], 'rb'):read("*all"))
-
 for i,fun in ipairs(metadata) do
   if not fun.noeval then
     funcs[fun.name] = {
@@ -34,6 +33,10 @@ for i,fun in ipairs(metadata) do
     }
   end
 end
+
+local funcsdata = io.open(funcs_file, 'w')
+funcsdata:write(mpack.pack(funcs))
+funcsdata:close()
 
 gperfpipe:write([[
 %language=ANSI-C
