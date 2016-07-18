@@ -16,6 +16,8 @@
 #include "nvim/misc1.h"
 #include "nvim/misc2.h"
 #include "nvim/ex_cmds.h"
+#include "nvim/map_defs.h"
+#include "nvim/map.h"
 #include "nvim/mark.h"
 #include "nvim/mark_extended.h"
 #include "nvim/fileio.h"
@@ -673,6 +675,18 @@ ArrayOf(Integer, 2) buffer_mark_index(Buffer buffer, String name, Error *err)
   return rv;
 }
 
+ArrayOf(Integer, 2) buffer_mark_test(Buffer buffer, String name, Error *err)
+{
+  Array rv = ARRAY_DICT_INIT;
+  buf_T *buf = find_buffer_by_handle(buffer, err);
+
+  ExtendedMark *extmark = pmap_get(cstr_t)(buf->b_extmarks, (cstr_t)name.data);
+  if (!extmark){
+    api_set_error(err, Validation, _("this fails after insert. "));
+      return rv;
+  }
+}
+
 /// Returns an ordered tuple of mark names in the buffer
 ///
 /// @param buffer The buffer handle
@@ -723,7 +737,7 @@ ArrayOf(Integer, 2) buffer_mark_next(Buffer buffer, String name, Error *err)
     return rv;
   }
 
-  ExtendedMark *extmark = get_extmark(buf, name.data);
+  ExtendedMark *extmark = extmark_get(buf, name.data);
   pos_T *pos = extmark_next(buf, &(extmark->fmark.mark));
   if (pos == NULL) {
     api_set_error(err, Validation, _("Invalid mark name"));
@@ -761,7 +775,7 @@ ArrayOf(Integer, 2) buffer_mark_prev(Buffer buffer, String name, Error *err)
     return rv;
   }
 
-  ExtendedMark *extmark = get_extmark(buf, name.data);
+  ExtendedMark *extmark = extmark_get(buf, name.data);
   pos_T *pos = extmark_prev(buf, &(extmark->fmark.mark));
   if (pos == NULL) {
     api_set_error(err, Validation, _("Invalid mark name"));
