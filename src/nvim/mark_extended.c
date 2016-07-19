@@ -94,7 +94,7 @@ static pos_T *get_pos(buf_T *buf, pos_T *pos, bool go_forward)
   return NULL;
 }
 
-static bool extmark_create(buf_T *buf, char *name, int row, int col)
+static bool extmark_create(buf_T *buf, char *name, linenr_T row, colnr_T col)
 {
   if (buf->b_extmarks == NULL) {
     buf->b_extmarks = pmap_new(cstr_t)();
