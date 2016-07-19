@@ -118,7 +118,7 @@
   void map_##T##_##U##_clear(Map(T, U) *map) \
   { \
     kh_clear(T##_##U##_map, map->table); \
-  }
+  } \
 
 static inline khint_t String_hash(String s)
 {
@@ -148,3 +148,4 @@ MAP_IMPL(handle_T, ptr_t, DEFAULT_INITIALIZER)
 MAP_IMPL(String, MsgpackRpcRequestHandler, MSGPACK_HANDLER_INITIALIZER)
 #define KVEC_INITIALIZER { .size = 0, .capacity = 0, .items = NULL }
 MAP_IMPL(linenr_T, bufhl_vec_T, KVEC_INITIALIZER)
+MAP_IMPL(cstr_t, StringMap, DEFAULT_INITIALIZER)
