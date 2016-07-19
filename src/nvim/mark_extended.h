@@ -1,7 +1,6 @@
 #ifndef NVIM_EXTMARK_H
 #define NVIM_EXTMARK_H
 
-/* #include "nvim/ex_cmds_defs.h" // for exarg_T */
 #include "nvim/mark_extended_defs.h"
 #include "nvim/lib/kbtree.h"
 #include "nvim/lib/kvec.h"
