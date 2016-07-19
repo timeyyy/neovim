@@ -95,7 +95,7 @@ static pos_T *get_pos(buf_T *buf, pos_T *pos, bool go_forward)
   END_LOOP
   return NULL;
 }
-
+/* fdsai */
 static bool extmark_create(buf_T *buf, char *name, linenr_T row, colnr_T col)
 {
   if (buf->b_extmarks == NULL) {
