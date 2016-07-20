@@ -643,9 +643,10 @@ ArrayOf(Integer, 2) buffer_get_mark(Buffer buffer, String name, Error *err)
 ///
 /// @param buffer The buffer handle
 /// @param name The mark's name
+/// @param namespace where the mark should reside
 /// @param[out] err Details of an error that may have occurred
 /// @return The (row, col) tuple
-ArrayOf(Integer, 2) buffer_mark_index(Buffer buffer, String name, Error *err)
+ArrayOf(Integer, 2) buffer_mark_index(Buffer buffer, String namespace, String name, Error *err)
 {
   Array rv = ARRAY_DICT_INIT;
   buf_T *buf = find_buffer_by_handle(buffer, err);
@@ -659,7 +660,7 @@ ArrayOf(Integer, 2) buffer_mark_index(Buffer buffer, String name, Error *err)
     return rv;
   }
 
-  pos_T *pos = extmark_index(buf, name.data);
+  pos_T *pos = extmark_index(buf, namespace.data, name.data);
   if (!pos) {
     api_set_error(err, Validation, _("Mark doesn't exist"));
     return rv;
@@ -670,26 +671,26 @@ ArrayOf(Integer, 2) buffer_mark_index(Buffer buffer, String name, Error *err)
 
   return rv;
 }
+// TODO DEL
+/* ArrayOf(Integer, 2) buffer_mark_test(Buffer buffer, String namespace, String name, Error *err) */
+/* { */
+  /* Array rv = ARRAY_DICT_INIT; */
+  /* buf_T *buf = find_buffer_by_handle(buffer, err); */
 
-ArrayOf(Integer, 2) buffer_mark_test(Buffer buffer, String name, Error *err)
-{
-  Array rv = ARRAY_DICT_INIT;
-  buf_T *buf = find_buffer_by_handle(buffer, err);
-
-  ExtendedMark *extmark = pmap_get(cstr_t)(buf->b_extmarks, (cstr_t)name.data);
-  if (!extmark){
-    api_set_error(err, Validation, _("this fails after insert. "));
-      return rv;
-  }
-  return rv;
-}
+  /* ExtendedMark *extmark = pmap_get(cstr_t)(buf->b_extmarks, (cstr_t)name.data); */
+  /* if (!extmark){ */
+    /* api_set_error(err, Validation, _("this fails after insert. ")); */
+      /* return rv; */
+  /* } */
+  /* return rv; */
+/* } */
 
 /// Returns an ordered tuple of mark names in the buffer
 ///
 /// @param buffer The buffer handle
 /// @param[out] err Details of an error that may have occurred
 /// @return Tuple of mark names
-ArrayOf(String) buffer_mark_names(Buffer buffer, Error *err)
+ArrayOf(String) buffer_mark_names(Buffer buffer, String namespace, Error *err)
 {
   Array rv = ARRAY_DICT_INIT;
   buf_T *buf = find_buffer_by_handle(buffer, err);
@@ -698,7 +699,7 @@ ArrayOf(String) buffer_mark_names(Buffer buffer, Error *err)
     return rv;
   }
 
-  ExtmarkNames *all_mark_names = extmark_names(buf);
+  NamesArray *all_mark_names = extmark_names(buf, namespace.data);
   // TODO yield results i.e iterator?
   cstr_t mark_name;
   for (size_t i = 0; i < kv_size(*all_mark_names); i++) {
@@ -720,7 +721,7 @@ ArrayOf(String) buffer_mark_names(Buffer buffer, Error *err)
 /// @param name The mark's name
 /// @param[out] err Details of an error that may have occurred
 /// @return The (row, col) tuple
-ArrayOf(Integer, 2) buffer_mark_next(Buffer buffer, String name, Error *err)
+ArrayOf(Integer, 2) buffer_mark_next(Buffer buffer, String namespace, String name, Error *err)
 {
   Array rv = ARRAY_DICT_INIT;
   buf_T *buf = find_buffer_by_handle(buffer, err);
@@ -734,8 +735,11 @@ ArrayOf(Integer, 2) buffer_mark_next(Buffer buffer, String name, Error *err)
     return rv;
   }
 
-  ExtendedMark *extmark = extmark_get(buf, name.data);
-  pos_T *pos = extmark_next(buf, &(extmark->fmark.mark));
+  ExtendedMark *extmark = extmark_get(buf, namespace.data, name.data);
+  pos_T *pos = extmark_next(buf, namespace.data,
+                            extmark->fmark.mark.lnum,
+                            extmark->fmark.mark.col);
+
   if (pos == NULL) {
     api_set_error(err, Validation, _("Invalid mark name"));
     return rv;
@@ -758,7 +762,7 @@ ArrayOf(Integer, 2) buffer_mark_next(Buffer buffer, String name, Error *err)
 /// @param name The mark's name
 /// @param[out] err Details of an error that may have occurred
 /// @return The (row, col) tuple
-ArrayOf(Integer, 2) buffer_mark_prev(Buffer buffer, String name, Error *err)
+ArrayOf(Integer, 2) buffer_mark_prev(Buffer buffer, String namespace, String name, Error *err)
 {
   Array rv = ARRAY_DICT_INIT;
   buf_T *buf = find_buffer_by_handle(buffer, err);
@@ -772,8 +776,10 @@ ArrayOf(Integer, 2) buffer_mark_prev(Buffer buffer, String name, Error *err)
     return rv;
   }
 
-  ExtendedMark *extmark = extmark_get(buf, name.data);
-  pos_T *pos = extmark_prev(buf, &(extmark->fmark.mark));
+  ExtendedMark *extmark = extmark_get(buf, namespace.data, name.data);
+  pos_T *pos = extmark_prev(buf, namespace.data,
+                            extmark->fmark.mark.lnum,
+                            extmark->fmark.mark.col);
   if (pos == NULL) {
     api_set_error(err, Validation, _("Invalid mark name"));
     return rv;
@@ -794,7 +800,7 @@ ArrayOf(Integer, 2) buffer_mark_prev(Buffer buffer, String name, Error *err)
 /// @param col position of the mark
 /// @param[out] err Details of an error that may have occurred
 /// @return 1 on new, 2 on update
-Integer buffer_mark_set(Buffer buffer, String name, Integer row, Integer col, Error *err)
+Integer buffer_mark_set(Buffer buffer, String namespace, String name, Integer row, Integer col, Error *err)
 {
   Integer rv = 0;
   buf_T *buf = find_buffer_by_handle(buffer, err);
@@ -803,7 +809,7 @@ Integer buffer_mark_set(Buffer buffer, String name, Integer row, Integer col, Er
     return rv;
   }
 
-  rv = (Integer)extmark_set(buf, name.data,
+  rv = (Integer)extmark_set(buf, namespace.data, name.data,
                             (linenr_T)row, (colnr_T)col);
 
   return rv;
@@ -815,7 +821,7 @@ Integer buffer_mark_set(Buffer buffer, String name, Integer row, Integer col, Er
 /// @param name The mark's name
 /// @param[out] err Details of an error that may have occurred
 /// @return 1 on success, 0 on no mark found
-Integer buffer_mark_unset(Buffer buffer, String name, Error *err)
+Integer buffer_mark_unset(Buffer buffer, String namespace, String name, Error *err)
 {
   Integer rv = 0;
   buf_T *buf = find_buffer_by_handle(buffer, err);
@@ -824,7 +830,7 @@ Integer buffer_mark_unset(Buffer buffer, String name, Error *err)
     return rv;
   }
 
-  rv = extmark_unset(buf, name.data);
+  rv = extmark_unset(buf, namespace.data, name.data);
 
   return rv;
 }
