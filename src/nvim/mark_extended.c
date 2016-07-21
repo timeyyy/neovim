@@ -11,6 +11,7 @@
 
 #include "nvim/vim.h"
 #include "nvim/mark_extended.h"
+#include "nvim/memory.h"
 #include "nvim/globals.h"      // FOR_ALL_BUFFERS
 #include "nvim/mark.h"         // SET_FMARK
 #include "nvim/map.h"          // pmap ...
@@ -56,6 +57,7 @@ ExtmarkNames *extmark_names(buf_T *buf)
 
 /* Returns the postion of the given mark  */
 pos_T *extmark_index(buf_T *buf, char *name) {
+  /* name = xstrdup(name); */
   ExtendedMark *extmark = extmark_get(buf, name);
   if (!extmark){
     return NULL;
@@ -106,10 +108,9 @@ static bool extmark_create(buf_T *buf, char *name, linenr_T row, colnr_T col)
   extmark->fmark.mark.lnum = row;
   extmark->fmark.mark.col = col;
   kb_put(extmarks, buf->b_extmarks_tree,  *extmark);
-  pmap_put(cstr_t)(buf->b_extmarks, (cstr_t)name, extmark);
+  pmap_put(cstr_t)(buf->b_extmarks, xstrdup(name), extmark);
   // TODO do we need the timestamp and additional_data ??, also pos_t has 3 fields
   SET_FMARK(&extmark->fmark, extmark->fmark.mark, buf->b_fnum);
-
   return OK;
 }
 
@@ -132,7 +133,7 @@ ExtendedMark *extmark_get(buf_T *buf, char *name)
   if (buf->b_extmarks == NULL) {
     return NULL;
   }
-  return pmap_get(cstr_t)(buf->b_extmarks, (cstr_t)name);
+  return pmap_get(cstr_t)(buf->b_extmarks, name);
 }
 
 int pos_cmp(pos_T a, pos_T b)
