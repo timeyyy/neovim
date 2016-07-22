@@ -87,7 +87,7 @@ static pos_T *get_pos(buf_T *buf, pos_T *pos, bool go_forward)
   FOR_ALL_EXTMARKS(buf)
     cmp = pos_cmp(*pos, extmark->fmark.mark);
     if (cmp == found) {
-      return &extmark->prev->fmark.mark;
+      return &prev->fmark.mark;
     }
     else if (cmp == 0) {
       return &extmark->fmark.mark;
@@ -102,28 +102,23 @@ static bool extmark_create(buf_T *buf, char *name, linenr_T row, colnr_T col)
     buf->b_extmarks = pmap_new(cstr_t)();
     buf->b_extmarks_tree = kb_init(extmarks, KB_DEFAULT_SIZE);
   }
-  // TODO set prev pointer
-  ExtendedMark *extmark = (ExtendedMark *) malloc(sizeof(ExtendedMark));
-
+  ExtendedMark *extmark = (ExtendedMark *) xmalloc(sizeof(ExtendedMark));
   extmark->fmark.mark.lnum = row;
   extmark->fmark.mark.col = col;
   kb_put(extmarks, buf->b_extmarks_tree,  *extmark);
   pmap_put(cstr_t)(buf->b_extmarks, xstrdup(name), extmark);
   // TODO do we need the timestamp and additional_data ??, also pos_t has 3 fields
-  SET_FMARK(&extmark->fmark, extmark->fmark.mark, buf->b_fnum);
   return OK;
 }
 
 static void extmark_update(ExtendedMark *extmark, linenr_T row, colnr_T col)
 {
-  // TODO set prev pointer
   extmark->fmark.mark.lnum = row;
   extmark->fmark.mark.col = col;
 }
 
 static int extmark_delete(buf_T *buf, char *name)
 {
-  // TODO set prev pointer, remove from btree
   pmap_del(cstr_t)(buf->b_extmarks, name);
   return OK;
 }
@@ -164,7 +159,7 @@ void extmark_free_all(buf_T *buf)
 //TODO  use from mark.c
 #define _col_adjust(pp) \
   { \
-    posp = pp; \
+    pos_T *posp = pp; \
     if (posp->lnum == lnum && posp->col >= mincol) \
     { \
       posp->lnum += lnum_amount; \
@@ -181,9 +176,8 @@ void extmark_free_all(buf_T *buf)
 /* from mark_adjust, and from wherever text edits happen */
 void extmark_col_adjust(buf_T *buf, linenr_T lnum, colnr_T mincol, long lnum_amount, long col_amount)
 {
-  pos_T *posp;
   FOR_ALL_EXTMARKS(buf)
-    _col_adjust(&extmark->fmark.mark)
+    _col_adjust(&(extmark->fmark.mark))
   END_LOOP
 }
 
