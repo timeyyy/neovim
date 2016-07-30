@@ -33,9 +33,6 @@ MAP_DECLS(handle_T, ptr_t)
 MAP_DECLS(String, MsgpackRpcRequestHandler)
 MAP_DECLS(linenr_T, bufhl_vec_T)
 
-typedef PMap(cstr_t) StringMap;
-MAP_DECLS(cstr_t, StringMap)
-
 #define map_new(T, U) map_##T##_##U##_new
 #define map_free(T, U) map_##T##_##U##_free
 #define map_get(T, U) map_##T##_##U##_get
