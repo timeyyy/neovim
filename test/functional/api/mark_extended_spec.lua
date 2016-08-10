@@ -17,16 +17,16 @@ describe('Extmarks buffer api', function()
   local ns
 
   before_each(function()
-  marks = {2, 3, 4}
-  positions = {{0, 1,}, {0, 3}, {0, 4}}
+    marks = {1, 2, 3}
+    positions = {{0, 1,}, {0, 3}, {0, 4}}
 
-  ns_string = "my-fancy-plugin"
-  ns_string2 = "my-fancy-plugin2"
-  init_text = "12345"
-  row = 0
-  col = 2
+    ns_string = "my-fancy-plugin"
+    ns_string2 = "my-fancy-plugin2"
+    init_text = "12345"
+    row = 0
+    col = 2
 
-  ns = 0
+    ns = 0
 
     helpers.clear()
     helpers.nvim('set_option', 'shell', helpers.nvim_dir .. '/shell-test')
@@ -35,13 +35,8 @@ describe('Extmarks buffer api', function()
     screen:attach(false)
 
     insert(init_text)
-  buf = request('vim_get_current_buffer')
+    buf = request('vim_get_current_buffer')
   end)
-
-
-  -- after_each(function()
-    -- screen:detach()
-  -- end)
 
   it('add and query namespaces', function()
     rv = buffer('mark_ns_init', ns_string)
@@ -54,9 +49,9 @@ describe('Extmarks buffer api', function()
     rv = buffer('mark_ns_ids')
     eq({ns_string, 1}, rv[1])
     eq({ns_string2, 2}, rv[2])
-  -- end)
+  end)
 
-  -- it('adds, updates  and deletes marks', function()
+  it('adds, updates  and deletes marks', function()
     -- ns = buffer('mark_ns_init', ns_string)
     rv = buffer('mark_set', buf, ns, marks[1], positions[1][1], positions[1][2])
     eq(1, rv)
@@ -84,9 +79,9 @@ describe('Extmarks buffer api', function()
     eq(1, rv)
     rv = buffer('mark_unset', buf, ns, marks[2])
     eq(1, rv)
-  -- end)
+  end)
 
-  -- it('gets information on current marks ', function()
+  it('querying for information and ranges ', function()
     -- add some more marks
     for i, m in ipairs(marks) do
         rv = buffer('mark_set', buf, ns, m, positions[i][1], positions[i][2])
@@ -96,9 +91,7 @@ describe('Extmarks buffer api', function()
     for i, m in ipairs(marks) do
         eq({m, positions[i][1], positions[i][2]}, rv[i])
     end
-  -- end)
 
-  -- it('returns ranges correctly', function()
     -- Using next
     rv = buffer('mark_next', buf, ns, marks[1])
     eq({marks[2], positions[2][1], positions[2][2]}, rv)
@@ -150,61 +143,40 @@ describe('Extmarks buffer api', function()
     -- eq({marks[1], positions[1][1], positions[1][2]}, rv[3])
   end)
 
-  pending('marks move with line insertations #test', function()
+  it('marks move with line insertations', function()
     rv = buffer('mark_set', buf, ns, marks[1], 1, 1)
     eq(1, rv)
-    screen:snapshot_util()
     feed("yyP")
-    screen:snapshot_util()
-    added_text = "999"
-    --feed("i<cr><esc>")
-    screen:snapshot_util()
     rv = buffer('mark_index', buf, ns, marks[1])
-    eq({2, 2, 1}, rv)
+    eq(2, rv[2])
+    eq(1, rv[3])
   end)
 
-  pending('marks move with line join #test', function()
-    feed("i<cr>abc<esc>")
-    screen:snapshot_util()
+  it('marks move with line join', function()
+    feed("a<cr>abc<esc>")
     rv = buffer('mark_set', buf, ns, marks[1], 2, 1)
-    added_text = "999"
-    feed('ggJ') -- move cursor to start of line
-    --feed("i<cr><esc>")
-    screen:snapshot_util()
+    feed('ggJ')
     rv = buffer('mark_index', buf, ns, marks[1])
-    print(require('inspect')(rv))
-    eq(row, pos[1])
-    eq(col + string.len(added_text), pos[2])
+    eq(1, rv[2])
+    eq(7, rv[3])
   end)
 
-  pending('marks move with line splits #test', function()
-    screen:snapshot_util()
-    rv = buffer('mark_set', buf, ns, marks[1], 1, 2)
-    added_text = "999"
-    feed('0li<cr><esc>') -- move cursor to start of line
-    --feed("i<cr><esc>")
-    screen:snapshot_util()
+  pending('marks move with line splits', function()
+    -- TODO erro on lnum 0
+    buffer('mark_set', buf, ns, marks[1], 1, 2)
+    feed('0li<cr><esc>')
     rv = buffer('mark_index', buf, ns, marks[1])
-    print(require('inspect')(rv))
-    eq(row, pos[1])
-    eq(col + string.len(added_text), pos[2])
+    eq(2, rv[2])
+    eq(1, rv[3])
   end)
 
   pending('marks move with text inserts', function()
-    rv = buffer('mark_set', buf, ns, marks[1], 0, 1)
-    added_text = "999"
-    feed('0') -- move cursor to start of line
-    insert(added_text)
-    screen:expect([[
-      99^912345            |
-      ~                   |
-      ~                   |
-                          |
-    ]])
+    rv = buffer('mark_set', buf, ns, marks[1], 1, 1)
+    feed('0')
+    feed('iabc')
     rv = buffer('mark_index', buf, ns, marks[1])
-    print(require('inspect')(pos))
-    eq(row, pos[1])
-    eq(col + string.len(added_text), pos[2])
+    eq(1, rv[2])
+    eq(4, rv[3])
   end)
 
 end)
