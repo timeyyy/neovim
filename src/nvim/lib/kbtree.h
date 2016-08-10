@@ -6,6 +6,14 @@
 #include <stdint.h>
 
 #define KB_MAX_DEPTH 64
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Woverflow"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#pragma GCC diagnostic ignored "-Wunused-function"
+/* #pragma GCC diagnostic ignored "-Wstrict-prototypes" */
+/* #pragma GCC diagnostic ignored "-Wpedantic" */
+/* #pragma GCC diagnostic ignored "-Wmissing-field-initializers" */
 
 #define	__KB_KEY(type, x)	(x->key)
 #define __KB_PTR(btr, x)	(x->ptr)

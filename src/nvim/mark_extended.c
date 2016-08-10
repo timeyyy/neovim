@@ -75,11 +75,9 @@ ExtmarkArray *extmark_ids(buf_T *buf, uint64_t ns)
 {
   ExtmarkArray *array = xmalloc(sizeof(ExtmarkArray));
   kv_init(*array);
-  FOR_EXTMARKS_IN_NS(buf, ns)
-  /* FOR_ALL_EXTMARKS(buf) */
+  FOR_ALL_EXTMARKS(buf)
     kv_push(*array, extmark);
-  END_FOR_EXTMARKS_IN_NS
-  /* END_FOR_ALL_EXTMARKS */
+  END_FOR_ALL_EXTMARKS
   return array;
 }
 
@@ -110,7 +108,7 @@ static ExtmarkArray *extmark_neighbour_range(buf_T *buf, uint64_t ns, pos_T *low
   ExtmarkArray *array = xmalloc(sizeof(ExtmarkArray));
   kv_init(*array);
   int cmp;
-  FOR_EXTMARKS_IN_NS(buf, ns)
+  FOR_ALL_EXTMARKS(buf)
     cmp = pos_cmp(*lower, extmark->mark);
     if (cmp != 1) {
       kv_push(*array, extmark);
@@ -118,7 +116,7 @@ static ExtmarkArray *extmark_neighbour_range(buf_T *buf, uint64_t ns, pos_T *low
     else if (cmp == 1) {
       break;
     }
-  END_FOR_EXTMARKS_IN_NS
+  END_FOR_ALL_EXTMARKS
 
   /* Swap the elements in the array */
   /* if (!go_forward) { */
@@ -144,14 +142,12 @@ static ExtendedMark *extmark_neighbour(buf_T *buf, uint64_t ns, pos_T *input, bo
   int cmp;
   if (go_forward) {
     FOR_ALL_EXTMARKS(buf)
-    /* FOR_EXTMARKS_IN_NS(buf, ns) */
       cmp = pos_cmp(*input, extmark->mark);
       if (cmp == -1) {
         return extmark;
       } else if (cmp == 0 && match) {
         return extmark;
       }
-    /* END_FOR_EXTMARKS_IN_NS */
     END_FOR_ALL_EXTMARKS
   }
   /* else { */
@@ -160,28 +156,10 @@ static ExtendedMark *extmark_neighbour(buf_T *buf, uint64_t ns, pos_T *input, bo
   return NULL;
 }
 
-ExtendedMark *extmark_ref(kbtree_t(extmarks) *b, pos_T pos, bool put)
-{
-  ExtendedMark t, *p , **pp;
-  t.mark = pos;
-  pp = kb_get(extmarks, b, &t);
-  // IMPORTANT: put() only works if key is absent
-  if (pp) {
-      return *pp;
-  } else if (!put) {
-      return NULL;
-  }
-  p = xcalloc(sizeof(*p),1);
-  p->mark = pos;
-  // p->items zero initialized
-  kb_put(extmarks, b, p);
-  return p;
-}
-
 static bool extmark_create(buf_T *buf, uint64_t ns, uint64_t id, linenr_T row, colnr_T col)
 {
   if (!buf->b_extmarks) {
-    buf->b_extmarks = kb_init(extmarks, KB_DEFAULT_SIZE);
+    buf->b_extmarks = kb_init(extmarks);
     buf->b_extmark_ns = pmap_new(uint64_t)();
   }
   /* ExtmarkNs *ns_obj = pmap_ref(uint64_t)(buf->b_extmark_ns, ns, true); */
@@ -191,7 +169,7 @@ static bool extmark_create(buf_T *buf, uint64_t ns, uint64_t id, linenr_T row, c
   if (!ns_obj) {
     ns_obj = xmalloc(sizeof(ExtmarkNs));
     ns_obj->map = pmap_new(uint64_t)();
-    ns_obj->tree = kb_init(extmarks, KB_DEFAULT_SIZE);
+    ns_obj->tree = kb_init(extmarks);
     pmap_put(uint64_t)(buf->b_extmark_ns, ns, ns_obj);
   }
 
@@ -333,16 +311,21 @@ void extmark_adjust(buf_T* buf, linenr_T line1, linenr_T line2, long amount, lon
   END_FOR_ALL_EXTMARKS
 }
 
+ExtendedMark *extmark_ref(kbtree_t(extmarks) *b, pos_T pos, bool put)
+{
+  ExtendedMark t, *p , **pp;
+  t.mark = pos;
+  pp = kb_get(extmarks, b, &t);
+  // IMPORTANT: put() only works if key is absent
+  if (pp) {
+      return *pp;
+  } else if (!put) {
+      return NULL;
+  }
+  p = xcalloc(sizeof(*p),1);
+  p->mark = pos;
+  // p->items zero initialized
+  kb_put(extmarks, b, p);
+  return p;
+}
 
-/* static pos_T gen_relative(buf_T *buf, uint64_t ns, linenr_T row, colnr_T col); */
-/* { */
-  /* pos_T pos; */
-  /* pos.lnum = row; */
-  /* pos.col = col; */
-  // CALCULATE ABSPOSITION
-  /* POS_T abs; */
-  /* FOR_ALL_EXTMARKS(buf) */
-      /* abs = extmark->mark; */
-  /* FOR_ALL_EXTMARKS */
-  /* return pos; */
-/* } */
