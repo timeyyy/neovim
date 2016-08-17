@@ -649,12 +649,13 @@ ArrayOf(Object) buffer_mark_index(Buffer buffer, Integer namespace, Object id, E
 {
   Array rv = ARRAY_DICT_INIT;
   ExtendedMark *extmark = extmark_from_id_or_pos(buffer, namespace, id, err);
+
   if (!extmark) {
     return rv;
   }
-  ADD(rv, INTEGER_OBJ((Integer)extmark->id));
-  ADD(rv, INTEGER_OBJ(extmark->mark.lnum));
-  ADD(rv, INTEGER_OBJ(extmark->mark.col));
+  ADD(rv, INTEGER_OBJ((Integer)extmark->mark_id));
+  ADD(rv, INTEGER_OBJ((Integer)extmark->line->lnum));
+  ADD(rv, INTEGER_OBJ((Integer)extmark->col));
   return rv;
 }
 
@@ -680,22 +681,21 @@ ArrayOf(Object) buffer_mark_ids(Buffer buffer, Integer namespace, Error *err)
     mark.capacity = 0;
     mark.items = 0;
     extmark = kv_A(*all_extmarks, i);
-    ADD(mark, INTEGER_OBJ((Integer)extmark->id));
-    ADD(mark, INTEGER_OBJ(extmark->mark.lnum));
-    ADD(mark, INTEGER_OBJ(extmark->mark.col));
+    ADD(mark, INTEGER_OBJ((Integer)extmark->mark_id));
+    ADD(mark, INTEGER_OBJ(extmark->line->lnum));
+    ADD(mark, INTEGER_OBJ(extmark->col));
     ADD(rv, ARRAY_OBJ(mark));
   }
   return rv;
 }
 
-//TODO allos position index or string index
 /// Returns the name of the mark following the given index
-/// If there are no following marks returns an empty string//TODO
-///
+/// If there are no following marks returns [-1, -1, -1]
+/// #TODO
 /// @param buffer The buffer handle
-/// @param name The mark's name
+/// @param id The mark's id
 /// @param[out] err Details of an error that may have occurred
-/// @return The (row, col) tuple
+/// @return The [id, row, col] list
 ArrayOf(Integer, 3) buffer_mark_next(Buffer buffer, Integer namespace, Object id, Error *err)
 {
   Array rv = ARRAY_DICT_INIT;
@@ -707,15 +707,15 @@ ArrayOf(Integer, 3) buffer_mark_next(Buffer buffer, Integer namespace, Object id
   }
 
   bool match = 0;
-  ExtendedMark *next = extmark_next(buf, (uint64_t)namespace, &extmark->mark, match);
+  ExtendedMark *next = extmark_next(buf, (uint64_t)namespace, extmark->line->lnum, extmark->col, match);
   if (!next) {
     ADD(rv, INTEGER_OBJ(-1));
     ADD(rv, INTEGER_OBJ(-1));
     ADD(rv, INTEGER_OBJ(-1));
   } else {
-    ADD(rv, INTEGER_OBJ((Integer)next->id));
-    ADD(rv, INTEGER_OBJ(next->mark.lnum));
-    ADD(rv, INTEGER_OBJ(next->mark.col));
+    ADD(rv, INTEGER_OBJ((Integer)next->mark_id));
+    ADD(rv, INTEGER_OBJ(next->line->lnum));
+    ADD(rv, INTEGER_OBJ(next->col));
   }
   return rv;
 }
@@ -733,13 +733,14 @@ ArrayOf(Object) buffer_mark_nextrange(Buffer buffer, Integer namespace, Object l
   Array rv = ARRAY_DICT_INIT;
   buf_T *buf = find_buffer_by_handle(buffer, err);
 
-  ExtendedMark *extmark_lower = extmark_from_id_or_pos(buffer, namespace, lower, err);
-  ExtendedMark *extmark_upper = extmark_from_id_or_pos(buffer, namespace, upper, err);
-  if(!extmark_lower || !extmark_upper) {
+  ExtendedMark *l_extmark = extmark_from_id_or_pos(buffer, namespace, lower, err);
+  ExtendedMark *u_extmark = extmark_from_id_or_pos(buffer, namespace, upper, err);
+  if(!l_extmark || !u_extmark) {
     return rv;
   }
   ExtmarkArray *extmarks_in_range = extmark_nextrange(buf, (uint64_t)namespace,
-          &extmark_lower->mark, &extmark_upper->mark);
+                                           l_extmark->line->lnum, l_extmark->col,
+                                           u_extmark->line->lnum, u_extmark->col);
 
   if (!extmarks_in_range) {
     ADD(rv, INTEGER_OBJ(-9));
@@ -753,9 +754,9 @@ ArrayOf(Object) buffer_mark_nextrange(Buffer buffer, Integer namespace, Object l
     mark.capacity = 0;
     mark.items = 0;
     extmark = kv_A(*extmarks_in_range, i);
-    ADD(mark, INTEGER_OBJ( (Integer)extmark->id) );
-    ADD(mark, INTEGER_OBJ(extmark->mark.lnum));
-    ADD(mark, INTEGER_OBJ(extmark->mark.col));
+    ADD(mark, INTEGER_OBJ( (Integer)extmark->mark_id) );
+    ADD(mark, INTEGER_OBJ(extmark->line->lnum));
+    ADD(mark, INTEGER_OBJ(extmark->col));
     ADD(rv, ARRAY_OBJ(mark));
   }
   return rv;
@@ -785,7 +786,7 @@ ArrayOf(Object) buffer_mark_ns_ids(Error *err)
   Array rv = ARRAY_DICT_INIT;
   Array ns_array = ARRAY_DICT_INIT;
 
-  /* can delete? */
+  /* TODO can delete? */
   if (!NAMESPACES) {
     return rv;
   }
@@ -815,15 +816,15 @@ ArrayOf(Object) buffer_mark_ns_ids(Error *err)
   /* } */
 
   /* bool match = 0; */
-  /* ExtendedMark *prev = extmark_prev(buf, (uint64_t)namespace, &extmark->mark, match); */
+  /* ExtendedMark *prev = extmark_prev(buf, (uint64_t)namespace, extmark->line->lnum, extmark->col, match); */
   /* if (!prev) { */
     /* ADD(rv, INTEGER_OBJ(-1)); */
     /* ADD(rv, INTEGER_OBJ(-1)); */
     /* ADD(rv, INTEGER_OBJ(-1)); */
   /* } else { */
-    /* ADD(rv, INTEGER_OBJ(prev->id)); */
-    /* ADD(rv, INTEGER_OBJ(prev->mark.lnum)); */
-    /* ADD(rv, INTEGER_OBJ(prev->mark.col)); */
+    /* ADD(rv, INTEGER_OBJ(prev->mark_id)); */
+    /* ADD(rv, INTEGER_OBJ(prev->line->lnum)); */
+    /* ADD(rv, INTEGER_OBJ(prev->col)); */
   /* } */
   /* return rv; */
 /* } */

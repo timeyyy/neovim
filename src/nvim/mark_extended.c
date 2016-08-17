@@ -48,14 +48,14 @@ bool ns_initialized(char *ns) {
 /* Create or update an extmark */
 /* returns 1 on new mark created */
 /* returns 2 on succesful update */
-int extmark_set(buf_T *buf, uint64_t ns, uint64_t id, linenr_T row, colnr_T col)
+int extmark_set(buf_T *buf, uint64_t ns, uint64_t id, linenr_T lnum, colnr_T col)
 {
   ExtendedMark *extmark = extmark_from_id(buf, ns, id);
   if (!extmark){
-    return extmark_create(buf, ns, id, row, col);
+    return extmark_create(buf, ns, id, lnum, col);
   }
   else {
-    extmark_update(extmark, buf, ns, id, row,  col);
+    extmark_update(extmark, buf, ns, id, lnum,  col);
    return 2;
   }
 }
@@ -70,54 +70,54 @@ int extmark_unset(buf_T *buf, uint64_t ns, uint64_t id)
   return extmark_delete(extmark, buf, ns, id);
 }
 
-/* Get all mark ids ordered by position*/ //TODO probably just use this directly in api
+//TODO probably just use this directly in api
+//TODO ORDER THE COLUMNS ...
+/* Get all mark ids ordered by position*/
 ExtmarkArray *extmark_ids(buf_T *buf, uint64_t ns)
 {
   ExtmarkArray *array = xmalloc(sizeof(ExtmarkArray));
   kv_init(*array);
-  FOR_ALL_EXTMARKS(buf)
+  FOR_ALL_EXTMARKS(buf, 0, -1)
     kv_push(*array, extmark);
   END_FOR_ALL_EXTMARKS
   return array;
 }
 
 /* Given a mark, finds the next mark */
-ExtendedMark *extmark_next(buf_T *buf, uint64_t ns, pos_T *pos, bool match)
+ExtendedMark *extmark_next(buf_T *buf, uint64_t ns, linenr_T lnum, colnr_T col, bool match)
 {
-  return extmark_neighbour(buf, ns, pos, 1, match);
+  return extmark_neighbour(buf, ns, lnum, col, 1, match);
 }
 
 /* Given a id finds the previous mark */
-ExtendedMark *extmark_prev(buf_T *buf, uint64_t ns, pos_T *pos, bool match)
+ExtendedMark *extmark_prev(buf_T *buf, uint64_t ns, linenr_T lnum, colnr_T col, bool match)
 {
-  return extmark_neighbour(buf, ns, pos, 0, match);
+  return extmark_neighbour(buf, ns, lnum, col, 0, match);
 }
 
-ExtmarkArray *extmark_nextrange(buf_T *buf, uint64_t ns, pos_T *lower, pos_T *upper)
+ExtmarkArray *extmark_nextrange(buf_T *buf, uint64_t ns, linenr_T l_lnum,
+                                colnr_T l_col, linenr_T u_lnum, colnr_T u_col)
 {
-  return extmark_neighbour_range(buf, ns, lower, upper, 1);
+  return extmark_neighbour_range(buf, ns, l_lnum, l_col, u_lnum, u_col, 1);
 }
 
 /* Returns the position of marks between a range, */
 /* marks found at the start or end index will be included, */
-/* if upper.lnum or upper.col are negative the buffer */
+/* if upper_lnum or upper_col are negative the buffer */
 /* will be searched to the end, */
 /* go_forward can be set to control the order of the array */
-static ExtmarkArray *extmark_neighbour_range(buf_T *buf, uint64_t ns, pos_T *lower, pos_T *upper, bool go_forward)
+static ExtmarkArray *extmark_neighbour_range(buf_T *buf, uint64_t ns,
+                                             linenr_T l_lnum, colnr_T l_col,
+                                             linenr_T u_lnum, colnr_T u_col,
+                                             bool go_forward)
 {
   ExtmarkArray *array = xmalloc(sizeof(ExtmarkArray));
   kv_init(*array);
-  int cmp;
-  FOR_ALL_EXTMARKS(buf)
-    cmp = pos_cmp(*lower, extmark->mark);
-    if (cmp != 1) {
+  FOR_ALL_EXTMARKS(buf, l_lnum, u_lnum)
+    if (extmark->ns_id == ns && extmark->col <= u_col) {
       kv_push(*array, extmark);
     }
-    else if (cmp == 1) {
-      break;
-    }
   END_FOR_ALL_EXTMARKS
-
   /* Swap the elements in the array */
   /* if (!go_forward) { */
       /* ExtendedMark holder; */
@@ -137,16 +137,18 @@ static ExtmarkArray *extmark_neighbour_range(buf_T *buf, uint64_t ns, pos_T *low
 /// @param input the desired position to be check agains
 /// @param go_forward flag to control next or prev
 /// @param match a flag to include a mark that is at the postiion being queried
-static ExtendedMark *extmark_neighbour(buf_T *buf, uint64_t ns, pos_T *input, bool go_forward, bool match)
+static ExtendedMark *extmark_neighbour(buf_T *buf, uint64_t ns, linenr_T lnum,
+                                       colnr_T col, bool go_forward, bool match)
 {
-  int cmp;
   if (go_forward) {
-    FOR_ALL_EXTMARKS(buf)
-      cmp = pos_cmp(*input, extmark->mark);
-      if (cmp == -1) {
-        return extmark;
-      } else if (cmp == 0 && match) {
-        return extmark;
+    FOR_ALL_EXTMARKS(buf, lnum, lnum)
+      if (extmark->ns_id == ns) {
+        /* return extmark; */
+        if (extmark->col > col) {
+          return extmark;
+        } else if (match && extmark->col == col) {
+          return extmark;
+        }
       }
     END_FOR_ALL_EXTMARKS
   }
@@ -156,65 +158,62 @@ static ExtendedMark *extmark_neighbour(buf_T *buf, uint64_t ns, pos_T *input, bo
   return NULL;
 }
 
-static bool extmark_create(buf_T *buf, uint64_t ns, uint64_t id, linenr_T row, colnr_T col)
+static bool extmark_create(buf_T *buf, uint64_t ns, uint64_t id, linenr_T lnum, colnr_T col)
 {
-  if (!buf->b_extmarks) {
-    buf->b_extmarks = kb_init(extmarks);
+  if (!buf->b_extlines) {
+    buf->b_extlines = kb_init(extlines);
     buf->b_extmark_ns = pmap_new(uint64_t)();
   }
-  /* ExtmarkNs *ns_obj = pmap_ref(uint64_t)(buf->b_extmark_ns, ns, true); */
   ExtmarkNs *ns_obj = NULL;
   ns_obj = pmap_get(uint64_t)(buf->b_extmark_ns, ns);
   /* Initialize a new namespace for this buffer*/
   if (!ns_obj) {
     ns_obj = xmalloc(sizeof(ExtmarkNs));
     ns_obj->map = pmap_new(uint64_t)();
-    ns_obj->tree = kb_init(extmarks);
     pmap_put(uint64_t)(buf->b_extmark_ns, ns, ns_obj);
   }
 
-  /* ExtendedMark *extmark = xmalloc(sizeof(ExtendedMark)); */
-  /* extmark->mark = gen_relative(buf, ns, row, col); */
-  pos_T *pos = xcalloc(sizeof(pos_T), 1);
-  pos->lnum=row;
-  pos->col=col;
-  /* extmark->mark.lnum=row;
-   * extmark->mark.col=col; */
+  ExtMarkLine *extline = extline_ref(buf->b_extlines, lnum, true);
+	extline->lnum = lnum;
+  ExtendedMark *extmark = kv_pushp(extline->items);
+	extmark->line = extline;
+  extmark->ns_id = ns;
+  extmark->mark_id = id;
+  extmark->col = col;
 
-  ExtendedMark *extmark = extmark_ref(buf->b_extmarks, *pos, true);
-  extmark->id = id;
-  // extmark->mark = *pos;
-  // kb_put(extmarks, buf->b_extmarks, extmark);
-  kb_put(extmarks, ns_obj->tree, extmark);
   pmap_put(uint64_t)(ns_obj->map, id, extmark);
 
   return OK;
 }
 
-static void extmark_update(ExtendedMark *extmark, buf_T *buf, uint64_t ns, uint64_t id, linenr_T row, colnr_T col)
+static void extmark_update(ExtendedMark *extmark, buf_T *buf, uint64_t ns, uint64_t id, linenr_T lnum, colnr_T col)
 {
-  extmark->mark.lnum = row;
-  extmark->mark.col = col;
-  /* gen_relative(); */
+  extmark->col = col;
+  extmark->line->lnum = lnum;
 }
 
-static int extmark_delete(ExtendedMark *extmark, buf_T *buf, uint64_t ns, uint64_t id)
+static int extmark_delete(ExtendedMark *input, buf_T *buf, uint64_t ns, uint64_t id)
 {
   /* Remove our key from the namespace */
   ExtmarkNs *ns_obj = pmap_get(uint64_t)(buf->b_extmark_ns, ns);
   pmap_del(uint64_t)(ns_obj->map, id);
 
-  /* Delete the mark */
-  kb_del(extmarks, buf->b_extmarks, extmark);
-  kb_del(extmarks, ns_obj->tree, extmark);
-  xfree(extmark); // wasn't required before change to storing pointers
-
+  int i=0;
+	FOR_ALL_EXTMARKS(buf, input->line->lnum, input->line->lnum)
+    if (extmark->ns_id == ns) {
+      /* delete mark from list */
+      kv_A(extline->items, i) = kv_pop(extline->items);
+    }
+    i++;
+  END_FOR_ALL_EXTMARKS
+  /* kb_del(extlines, buf->b_extlines, extmark->line); */
+  /* xfree(extmark); // wasn't required before change to storing pointers */
   return OK;
 }
 
 ExtendedMark *extmark_from_id(buf_T *buf, uint64_t ns, uint64_t id)
 {
-  if (!buf->b_extmarks) {
+  if (!buf->b_extlines) {
     return NULL;
   }
   ExtmarkNs *ns_obj = pmap_get(uint64_t)(buf->b_extmark_ns, ns);
@@ -224,98 +223,80 @@ ExtendedMark *extmark_from_id(buf_T *buf, uint64_t ns, uint64_t id)
   return pmap_get(uint64_t)(ns_obj->map, id);
 }
 
-ExtendedMark *extmark_from_pos(buf_T *buf, uint64_t ns, linenr_T row, colnr_T col)
+ExtendedMark *extmark_from_pos(buf_T *buf, uint64_t ns, linenr_T lnum, colnr_T col)
 {
-  if (!buf->b_extmarks) {
+  if (!buf->b_extlines) {
     return NULL;
   }
-  pos_T pos;
-  pos.lnum = row;
-  pos.col = col;
-  FOR_ALL_EXTMARKS(buf)
-    if (pos_cmp(extmark->mark, pos) == 0) {
-      return extmark;
+  FOR_ALL_EXTMARKS(buf, lnum, lnum)
+    if (extmark->ns_id == ns) {
+      if (extmark->col == col) {
+        return extmark;
+      }
     }
   END_FOR_ALL_EXTMARKS
   return NULL;
 }
 
-int pos_cmp(pos_T a, pos_T b)
-{
-  if (a.lnum < b.lnum) {
-    return -1;
-  }
-  else if (a.lnum == b.lnum) {
-    if (a.col < b.col) {
-      return -1;
-    }
-    else if (a.col == b.col) {
-      return 0;
-    }
-  }
-  return 1;
-}
-
 void extmark_free_all(buf_T *buf)
 {
-  if (!buf->b_extmarks) {
+  if (!buf->b_extlines) {
     return;
   }
   pmap_free(uint64_t)(buf->b_extmark_ns);
   /* FOR_ALL_EXTMARKS(buf) // wasn't required beforestoring pointers in kbtree */
-    /* kb_del(extmarks, extmark); */
+    /* kb_del(extlines, extmark); */
   /* END_FOR_ALL_EXTMARKS */
-  kb_destroy(extmarks, buf->b_extmarks);
+  kb_destroy(extlines, buf->b_extlines);
 }
 
-//TODO  use from mark.c
-#define _col_adjust(pp) \
+#define _col_adjust(mark_lnum, mark_col) \
   { \
-    pos_T *posp = pp; \
-    if (posp->lnum == lnum && posp->col >= mincol) \
+    if (mark_lnum == lnum && mark_col >= mincol) \
     { \
-      posp->lnum += lnum_amount; \
+      mark_lnum += lnum_amount; \
       assert(col_amount > INT_MIN && col_amount <= INT_MAX); \
-      if (col_amount < 0 && posp->col <= (colnr_T)-col_amount) \
-        posp->col = 0; \
+      if (col_amount < 0 && mark_col <= (colnr_T)-col_amount) \
+        mark_col = 0; \
       else \
-        posp->col += (colnr_T)col_amount; \
+        mark_col += (colnr_T)col_amount; \
     } \
   }
 
 /* Adjust exmarks when changes to columns happen */
+/* We only need to adjust marks on the same line */
 /* This is called from mark_col_adjust as well as */
 /* from mark_adjust, and from wherever text edits happen */
 void extmark_col_adjust(buf_T *buf, linenr_T lnum, colnr_T mincol, long lnum_amount, long col_amount)
 {
-  FOR_ALL_EXTMARKS(buf)
-    _col_adjust(&(extmark->mark))
+  FOR_ALL_EXTMARKS(buf, lnum, lnum+lnum_amount)
+    _col_adjust(extmark->line->lnum, extmark->col)
   END_FOR_ALL_EXTMARKS
 }
 
  /* Adjust extmark row for inserted/deleted rows. */
 void extmark_adjust(buf_T* buf, linenr_T line1, linenr_T line2, long amount, long amount_after)
 {
-  FOR_ALL_EXTMARKS(buf)
-    if (extmark->mark.lnum >= line1
-        && extmark->mark.lnum <= line2) {
+  FOR_ALL_EXTMARKLINES(buf)
+    if (extline->lnum >= line1
+        && extline->lnum <= line2) {
           if (amount == MAXLNUM) {
-            extmark->mark.lnum = line1;
+            extline->lnum = line1;
           }
           else {
-            extmark->mark.lnum += amount;
+            extline->lnum += amount;
           }
     }
-    else if (extmark->mark.lnum > line2)
-        extmark->mark.lnum += amount_after;
-  END_FOR_ALL_EXTMARKS
+    else if (extline->lnum > line2)
+        extline->lnum += amount_after;
+  END_FOR_ALL_EXTMARKLINES
 }
 
-ExtendedMark *extmark_ref(kbtree_t(extmarks) *b, pos_T pos, bool put)
+ExtendedMark *extline_ref(kbtree_t(extlines) *b, linenr_T lnum, bool put)
 {
-  ExtendedMark t, *p , **pp;
-  t.mark = pos;
-  pp = kb_get(extmarks, b, &t);
+  ExtMarkLine t, *p , **pp;
+  t.lnum = lnum;
+  pp = kb_get(extlines, b, &t);
   // IMPORTANT: put() only works if key is absent
   if (pp) {
       return *pp;
@@ -323,9 +304,8 @@ ExtendedMark *extmark_ref(kbtree_t(extmarks) *b, pos_T pos, bool put)
       return NULL;
   }
   p = xcalloc(sizeof(*p),1);
-  p->mark = pos;
+  p->lnum = lnum;
   // p->items zero initialized
-  kb_put(extmarks, b, p);
+  kb_put(extlines, b, p);
   return p;
 }
-

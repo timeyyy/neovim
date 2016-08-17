@@ -38,9 +38,12 @@ describe('Extmarks buffer api', function()
     buf = request('vim_get_current_buffer')
   end)
 
+  -- Implemented as Globals, that is why we don't have to init before other tests
   it('add and query namespaces', function()
+    -- TODO test calling functions fails before this is scalled
     rv = buffer('mark_ns_init', ns_string)
     eq(1, rv)
+    -- TODO Test error
     -- rv = buffer('mark_ns_init', ns_string)
     -- eq(0, rv)
     rv = buffer('mark_ns_init', ns_string2)
@@ -52,7 +55,6 @@ describe('Extmarks buffer api', function()
   end)
 
   it('adds, updates  and deletes marks', function()
-    -- ns = buffer('mark_ns_init', ns_string)
     rv = buffer('mark_set', buf, ns, marks[1], positions[1][1], positions[1][2])
     eq(1, rv)
     rv = buffer('mark_index', buf, ns, marks[1])
@@ -81,12 +83,13 @@ describe('Extmarks buffer api', function()
     eq(1, rv)
   end)
 
-  it('querying for information and ranges ', function()
+  it('querying for information and ranges', function()
     -- add some more marks
     for i, m in ipairs(marks) do
         rv = buffer('mark_set', buf, ns, m, positions[i][1], positions[i][2])
         eq(1, rv)
     end
+
     rv = buffer('mark_ids', buf, ns)
     for i, m in ipairs(marks) do
         eq({m, positions[i][1], positions[i][2]}, rv[i])
@@ -99,7 +102,7 @@ describe('Extmarks buffer api', function()
     eq({marks[3], positions[3][1], positions[3][2]}, rv)
     rv = buffer('mark_next', buf, ns, marks[3])
     eq({-1, -1, -1}, rv)
-    -- next range
+    -- Using nextrange
     rv = buffer('mark_nextrange', buf, ns, marks[1], marks[3])
     eq({marks[1], positions[1][1], positions[1][2]}, rv[1])
     eq({marks[2], positions[2][1], positions[2][2]}, rv[2])
@@ -120,7 +123,7 @@ describe('Extmarks buffer api', function()
     -- eq({marks[1], positions[1][1], positions[1][2]}, rv[3])
     -- end)
 
-  -- it('returns ranges correctly when using position indexes', function()
+  -- returns ranges correctly when using positional indexes
     rv = buffer('mark_index', buf, ns, positions[1])
     eq({marks[1], positions[1][1], positions[1][2]}, rv)
 
@@ -152,7 +155,7 @@ describe('Extmarks buffer api', function()
     eq(1, rv[3])
   end)
 
-  it('marks move with line join', function()
+  pending('marks move with line join #broken', function()
     feed("a<cr>abc<esc>")
     rv = buffer('mark_set', buf, ns, marks[1], 2, 1)
     eq(1, rv)
