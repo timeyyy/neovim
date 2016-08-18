@@ -127,18 +127,16 @@ describe('Extmarks buffer api', function()
     rv = buffer('mark_index', buf, ns, positions[1])
     eq({marks[1], positions[1][1], positions[1][2]}, rv)
 
-    -- TODO decide on behaviour
-    -- rv = buffer('mark_next', buf, ns, positions[1])
-    -- eq({marks[1], positions[1][1], positions[1][2]}, rv)
+    rv = buffer('mark_next', buf, ns, positions[1])
+    eq({marks[2], positions[2][1], positions[2][2]}, rv)
 
     rv = buffer('mark_nextrange', buf, ns, positions[1], positions[3])
     eq({marks[1], positions[1][1], positions[1][2]}, rv[1])
     eq({marks[2], positions[2][1], positions[2][2]}, rv[2])
     eq({marks[3], positions[3][1], positions[3][2]}, rv[3])
 
-    -- TODO decide on behaviour
     -- rv = buffer('mark_prev', buf, ns, positions[3])
-    -- eq({marks[1], positions[1][1], positions[1][2]}, rv)
+    -- eq({marks[2], positions[2][1], positions[2][2]}, rv)
 
     -- rv = buffer('mark_prevrange', buf, ns, positions[1], positions[3])
     -- eq({marks[3], positions[3][1], positions[3][2]}, rv[1])
@@ -174,7 +172,7 @@ describe('Extmarks buffer api', function()
     screen:snapshot_util()
     rv = buffer('mark_index', buf, ns, marks[1])
     eq(2, rv[2])
-    -- eq(1, rv[3])
+    eq(1, rv[3])
   end)
 
   pending('marks move with text inserts #test3', function()

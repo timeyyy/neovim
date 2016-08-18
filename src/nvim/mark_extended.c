@@ -101,10 +101,16 @@ ExtmarkArray *extmark_nextrange(buf_T *buf, uint64_t ns, linenr_T l_lnum,
   return extmark_neighbour_range(buf, ns, l_lnum, l_col, u_lnum, u_col, 1);
 }
 
+ExtmarkArray *extmark_prevrange(buf_T *buf, uint64_t ns, linenr_T l_lnum,
+                                colnr_T l_col, linenr_T u_lnum, colnr_T u_col)
+{
+  return extmark_neighbour_range(buf, ns, l_lnum, l_col, u_lnum, u_col, 0);
+}
+
 /* Returns the position of marks between a range, */
 /* marks found at the start or end index will be included, */
 /* if upper_lnum or upper_col are negative the buffer */
-/* will be searched to the end, */
+/* will be searched to the start, or end */
 /* go_forward can be set to control the order of the array */
 static ExtmarkArray *extmark_neighbour_range(buf_T *buf, uint64_t ns,
                                              linenr_T l_lnum, colnr_T l_col,
@@ -134,7 +140,7 @@ static ExtmarkArray *extmark_neighbour_range(buf_T *buf, uint64_t ns,
 }
 
 /// Returns the mark, nearest to or including the passed in mark
-/// @param input the desired position to be check agains
+/// @param input the desired position to be checked
 /// @param go_forward flag to control next or prev
 /// @param match a flag to include a mark that is at the postiion being queried
 static ExtendedMark *extmark_neighbour(buf_T *buf, uint64_t ns, linenr_T lnum,

@@ -638,13 +638,13 @@ ArrayOf(Integer, 2) nvim_buf_get_mark(Buffer buffer, String name, Error *err)
   return rv;
 }
 
-/// Return a tuple (row,col) representing the position of the named mark
+/// Returns mark info at the given position or mark index
 ///
 /// @param buffer The buffer handle
-/// @param name The mark's name
-/// @param namespace where the mark should reside
+/// @param namespace a identifier returned previously with namespace_create
+/// @param id [row, col] or mark_id of mark
 /// @param[out] err Details of an error that may have occurred
-/// @return The (row, col) tuple
+/// @return [mark_id, row, col]
 ArrayOf(Object) buffer_mark_index(Buffer buffer, Integer namespace, Object id, Error *err)
 {
   Array rv = ARRAY_DICT_INIT;
@@ -659,11 +659,11 @@ ArrayOf(Object) buffer_mark_index(Buffer buffer, Integer namespace, Object id, E
   return rv;
 }
 
-/// Returns an ordered tuple of mark names in the buffer
+/// Returns an ordered list of mark info
 ///
 /// @param buffer The buffer handle
 /// @param[out] err Details of an error that may have occurred
-/// @return Tuple of mark names
+/// @return [[mark_id, row, col], ...]
 ArrayOf(Object) buffer_mark_ids(Buffer buffer, Integer namespace, Error *err)
 {
   Array rv = ARRAY_DICT_INIT;
@@ -689,13 +689,14 @@ ArrayOf(Object) buffer_mark_ids(Buffer buffer, Integer namespace, Error *err)
   return rv;
 }
 
-/// Returns the name of the mark following the given index
+/// Returns mark info of the mark following the given index
 /// If there are no following marks returns [-1, -1, -1]
-/// #TODO
+///
 /// @param buffer The buffer handle
+/// @param namespace a identifier returned previously with namespace_create
 /// @param id The mark's id
 /// @param[out] err Details of an error that may have occurred
-/// @return The [id, row, col] list
+/// @return [id, row, col]
 ArrayOf(Integer, 3) buffer_mark_next(Buffer buffer, Integer namespace, Object id, Error *err)
 {
   Array rv = ARRAY_DICT_INIT;
@@ -720,14 +721,16 @@ ArrayOf(Integer, 3) buffer_mark_next(Buffer buffer, Integer namespace, Object id
   return rv;
 }
 
-//TODO allos position index or string index
-/// Returns the name of the mark following the given index
-/// If there are no following marks returns an empty string//TODO
+/// Returns mark info inbetween and including the bounds
+/// If there are no following marks returns [-1, -1, -1] // TODO
+/// To search untill the end of the buffer do an upper bound of -1 //TODO
 ///
 /// @param buffer The buffer handle
-/// @param name The mark's name
+/// @param namespace a identifier returned previously with namespace_create
+/// @param lower [row, col] or mark_id of lower bound
+/// @param uower [row, col] or mark_id of upper bound
 /// @param[out] err Details of an error that may have occurred
-/// @return The (row, col) tuple
+/// @return [[mark_id, row, col], ...]
 ArrayOf(Object) buffer_mark_nextrange(Buffer buffer, Integer namespace, Object lower, Object upper, Error *err)
 {
   Array rv = ARRAY_DICT_INIT;
@@ -764,9 +767,9 @@ ArrayOf(Object) buffer_mark_nextrange(Buffer buffer, Integer namespace, Object l
 
 /// Setup a new namepsace for holding you marks
 ///
-/// @param namespace String id for the namespace
+/// @param namespace String name for the namespace
 /// @param[out] err Details of an error that may have occurred
-/// @return an integer id to be used with future mark_ calls, or 0 if name exists
+/// @return integer id to be used with future mark_ calls, or 0 if name exists
 Integer buffer_mark_ns_init(String namespace, Error *err)
 {
   uint64_t ns_id = extmark_ns_create(namespace.data);
@@ -777,10 +780,10 @@ Integer buffer_mark_ns_init(String namespace, Error *err)
   return ns_id;
 }
 
-/// Returns an unordered tuple of mark namespaces in nvim
+/// Returns a list of mark namespaces in nvim
 ///
 /// @param[out] err Details of an error that may have occurred
-/// @return Tuple of tuples, [string name, int id]
+/// @return [[string name, int id], ...]
 ArrayOf(Object) buffer_mark_ns_ids(Error *err)
 {
   Array rv = ARRAY_DICT_INIT;
@@ -805,34 +808,88 @@ ArrayOf(Object) buffer_mark_ns_ids(Error *err)
 }
 
 
-/* ArrayOf(Integer, 3) buffer_mark_prev(Buffer buffer, Integer namespace, Object id, Error *err) */
-/* { */
-  /* Array rv = ARRAY_DICT_INIT; */
-  /* buf_T *buf = find_buffer_by_handle(buffer, err); */
-
-  /* ExtendedMark *extmark = extmark_from_id_or_pos(buffer, namespace, id, err); */
-  /* if (!extmark) { */
-    /* return rv; */
-  /* } */
-
-  /* bool match = 0; */
-  /* ExtendedMark *prev = extmark_prev(buf, (uint64_t)namespace, extmark->line->lnum, extmark->col, match); */
-  /* if (!prev) { */
-    /* ADD(rv, INTEGER_OBJ(-1)); */
-    /* ADD(rv, INTEGER_OBJ(-1)); */
-    /* ADD(rv, INTEGER_OBJ(-1)); */
-  /* } else { */
-    /* ADD(rv, INTEGER_OBJ(prev->mark_id)); */
-    /* ADD(rv, INTEGER_OBJ(prev->line->lnum)); */
-    /* ADD(rv, INTEGER_OBJ(prev->col)); */
-  /* } */
-  /* return rv; */
-/* } */
-/// at the giving position. If the mark already exists, it is
-/// moved to the new location.
-//
+/// Returns mark info of the mark preceding the given index
+/// If there are no previous marks returns [-1, -1, -1] // TODO
+///
 /// @param buffer The buffer handle
-/// @param namespace allow
+/// @param namespace a identifier returned previously with namespace_create
+/// @param id The mark's id
+/// @param lower [row, col] or mark_id of lower bound
+/// @param uower [row, col] or mark_id of upper bound
+/// @param[out] err Details of an error that may have occurred
+/// @return The [[mark_id, row, col], ...] list
+ArrayOf(Integer, 3) buffer_mark_prev(Buffer buffer, Integer namespace, Object id, Error *err)
+{
+  Array rv = ARRAY_DICT_INIT;
+  buf_T *buf = find_buffer_by_handle(buffer, err);
+
+  ExtendedMark *extmark = extmark_from_id_or_pos(buffer, namespace, id, err);
+  if (!extmark) {
+    return rv;
+  }
+
+  bool match = 0;
+  ExtendedMark *prev = extmark_prev(buf, (uint64_t)namespace, extmark->line->lnum, extmark->col, match);
+  if (!prev) {
+    ADD(rv, INTEGER_OBJ(-1));
+    ADD(rv, INTEGER_OBJ(-1));
+    ADD(rv, INTEGER_OBJ(-1));
+  } else {
+    ADD(rv, INTEGER_OBJ(prev->mark_id));
+    ADD(rv, INTEGER_OBJ(prev->line->lnum));
+    ADD(rv, INTEGER_OBJ(prev->col));
+  }
+  return rv;
+}
+
+/// Returns mark info inbetween and including the bounds in reverse order
+/// If there are no previous marks returns [-1, -1, -1]
+/// To search to the start of the buffer do a lower bound of -1 //TODO
+///
+/// @param buffer The buffer handle
+/// @param namespace a identifier returned previously with namespace_create
+/// @param lower [row, col] or mark_id of lower bound
+/// @param uower [row, col] or mark_id of upper bound
+/// @param[out] err Details of an error that may have occurred
+/// @return [[mark_id, row, col], ...]
+ArrayOf(Object) buffer_mark_prevrange(Buffer buffer, Integer namespace, Object lower, Object upper, Error *err)
+{
+  Array rv = ARRAY_DICT_INIT;
+  buf_T *buf = find_buffer_by_handle(buffer, err);
+
+  ExtendedMark *l_extmark = extmark_from_id_or_pos(buffer, namespace, lower, err);
+  ExtendedMark *u_extmark = extmark_from_id_or_pos(buffer, namespace, upper, err);
+  if(!l_extmark || !u_extmark) {
+    return rv;
+  }
+  ExtmarkArray *extmarks_in_range = extmark_prevrange(buf, (uint64_t)namespace,
+                                           l_extmark->line->lnum, l_extmark->col,
+                                           u_extmark->line->lnum, u_extmark->col);
+
+  if (!extmarks_in_range) {
+    ADD(rv, INTEGER_OBJ(-9));
+    return rv;
+  }
+
+  Array mark = ARRAY_DICT_INIT;
+  ExtendedMark *extmark;
+  for (size_t i = 0; i < kv_size(*extmarks_in_range); i++) {
+    mark.size = 0;
+    mark.capacity = 0;
+    mark.items = 0;
+    extmark = kv_A(*extmarks_in_range, i);
+    ADD(mark, INTEGER_OBJ( (Integer)extmark->mark_id) );
+    ADD(mark, INTEGER_OBJ(extmark->line->lnum));
+    ADD(mark, INTEGER_OBJ(extmark->col));
+    ADD(rv, ARRAY_OBJ(mark));
+  }
+  return rv;
+}
+
+/// Create or update a mark at a position
+///
+/// @param buffer The buffer handle
+/// @param namespace a identifier returned previously with namespace_create
 /// @param id The mark's id
 /// @param row position of the mark
 /// @param col position of the mark
@@ -853,9 +910,9 @@ Integer buffer_mark_set(Buffer buffer, Integer namespace, Integer id, Integer ro
 }
 
 /// Remove a mark
-//
+///
 /// @param buffer The buffer handle
-/// @param namespace a identifier used previously with namespace_create
+/// @param namespace a identifier returned previously with namespace_create
 /// @param id The mark's id
 /// @param[out] err Details of an error that may have occurred
 /// @return 1 on success, 0 on no mark found
