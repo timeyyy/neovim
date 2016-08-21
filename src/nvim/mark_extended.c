@@ -255,6 +255,34 @@ void extmark_free_all(buf_T *buf)
   /* END_FOR_ALL_EXTMARKS */
   kb_destroy(extlines, buf->b_extlines);
 }
+#define _one_adjust(add) \
+  { \
+    lp = add; \
+    if (*lp >= line1 && *lp <= line2) \
+    { \
+      if (amount == MAXLNUM) \
+        *lp = 0; \
+      else \
+        *lp += amount; \
+    } \
+    else if (amount_after && *lp > line2) \
+      *lp += amount_after; \
+  }
+
+#define _one_adjust_nodel(add) \
+  { \
+    lp = add; \
+    if (*lp >= line1 && *lp <= line2) \
+    { \
+      if (amount == MAXLNUM) \
+        *lp = line1; \
+      else \
+        *lp += amount; \
+    } \
+    else if (amount_after && *lp > line2) \
+      *lp += amount_after; \
+  }
+
 
 #define _col_adjust(mark_lnum, mark_col) \
   { \
@@ -280,21 +308,37 @@ void extmark_col_adjust(buf_T *buf, linenr_T lnum, colnr_T mincol, long lnum_amo
   END_FOR_ALL_EXTMARKS
 }
 
+/*
+ * Adjust marks between line1 and line2 (inclusive) to move 'amount' lines.
+ * Must be called before changed_*(), appended_lines() or deleted_lines().
+ * May be called before or after changing the text.
+ * When deleting lines line1 to line2, use an 'amount' of MAXLNUM: The marks
+ * within this range are made invalid.
+ * If 'amount_after' is non-zero adjust marks after line2.
+ * Example: Delete lines 34 and 35: mark_adjust(34, 35, MAXLNUM, -2);
+ * Example: Insert two lines below 55: mark_adjust(56, MAXLNUM, 2, 0);
+ *				   or: mark_adjust(56, 55, MAXLNUM, 2);
+ */
  /* Adjust extmark row for inserted/deleted rows. */
 void extmark_adjust(buf_T* buf, linenr_T line1, linenr_T line2, long amount, long amount_after)
 {
+  linenr_T *lp;
   FOR_ALL_EXTMARKLINES(buf)
-    if (extline->lnum >= line1
-        && extline->lnum <= line2) {
-          if (amount == MAXLNUM) {
-            extline->lnum = line1;
-          }
-          else {
-            extline->lnum += amount;
-          }
+    lp = &(extline->lnum);
+    if (amount_after != 0)
+      *lp += amount_after;
+    /* if (*lp == line1 && *lp == line2) */
+    else if (*lp < line2)
+      *lp += amount;
+    else if (*lp >= line1 && *lp <= line2) {
+      if (amount == MAXLNUM)
+        *lp = line2+amount_after;
+        /* *lp = line1; */
+      else
+        *lp += amount;
     }
-    else if (extline->lnum > line2)
-        extline->lnum += amount_after;
+    /* else if (amount_after && *lp > line2) */
+      /* *lp += amount_after; */
   END_FOR_ALL_EXTMARKLINES
 }
 
