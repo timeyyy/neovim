@@ -492,7 +492,7 @@ struct file_buffer {
   bool file_id_valid;
   FileID file_id;
 
-  int b_fnum;                   /* buffer number for this file. */
+  /* int b_fnum;                   /1* buffer number for this file. *1/ */
 
   kbtree_t(extlines) *b_extlines;
   IntMap *b_extmark_ns;
