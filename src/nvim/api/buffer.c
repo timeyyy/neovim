@@ -645,7 +645,7 @@ ArrayOf(Integer, 2) nvim_buf_get_mark(Buffer buffer, String name, Error *err)
 /// @param id [row, col] or mark_id of mark
 /// @param[out] err Details of an error that may have occurred
 /// @return [mark_id, row, col]
-ArrayOf(Object) buffer_mark_index(Buffer buffer, Integer namespace, Object id, Error *err)
+ArrayOf(Object) nvim_buf_mark_index(Buffer buffer, Integer namespace, Object id, Error *err)
 {
   Array rv = ARRAY_DICT_INIT;
   ExtendedMark *extmark = extmark_from_id_or_pos(buffer, namespace, id, err);
@@ -664,7 +664,7 @@ ArrayOf(Object) buffer_mark_index(Buffer buffer, Integer namespace, Object id, E
 /// @param buffer The buffer handle
 /// @param[out] err Details of an error that may have occurred
 /// @return [[mark_id, row, col], ...]
-ArrayOf(Object) buffer_mark_ids(Buffer buffer, Integer namespace, Error *err)
+ArrayOf(Object) nvim_buf_mark_ids(Buffer buffer, Integer namespace, Error *err)
 {
   Array rv = ARRAY_DICT_INIT;
   buf_T *buf = find_buffer_by_handle(buffer, err);
@@ -697,7 +697,7 @@ ArrayOf(Object) buffer_mark_ids(Buffer buffer, Integer namespace, Error *err)
 /// @param id The mark's id
 /// @param[out] err Details of an error that may have occurred
 /// @return [id, row, col]
-ArrayOf(Integer, 3) buffer_mark_next(Buffer buffer, Integer namespace, Object id, Error *err)
+ArrayOf(Integer, 3) nvim_buf_mark_next(Buffer buffer, Integer namespace, Object id, Error *err)
 {
   Array rv = ARRAY_DICT_INIT;
   buf_T *buf = find_buffer_by_handle(buffer, err);
@@ -731,7 +731,7 @@ ArrayOf(Integer, 3) buffer_mark_next(Buffer buffer, Integer namespace, Object id
 /// @param uower [row, col] or mark_id of upper bound
 /// @param[out] err Details of an error that may have occurred
 /// @return [[mark_id, row, col], ...]
-ArrayOf(Object) buffer_mark_nextrange(Buffer buffer, Integer namespace, Object lower, Object upper, Error *err)
+ArrayOf(Object) nvim_buf_mark_nextrange(Buffer buffer, Integer namespace, Object lower, Object upper, Error *err)
 {
   Array rv = ARRAY_DICT_INIT;
   buf_T *buf = find_buffer_by_handle(buffer, err);
@@ -770,7 +770,7 @@ ArrayOf(Object) buffer_mark_nextrange(Buffer buffer, Integer namespace, Object l
 /// @param namespace String name for the namespace
 /// @param[out] err Details of an error that may have occurred
 /// @return integer id to be used with future mark_ calls, or 0 if name exists
-Integer buffer_mark_ns_init(String namespace, Error *err)
+Integer nvim_buf_mark_ns_init(String namespace, Error *err)
 {
   uint64_t ns_id = extmark_ns_create(namespace.data);
   if (!ns_id) {
@@ -784,7 +784,7 @@ Integer buffer_mark_ns_init(String namespace, Error *err)
 ///
 /// @param[out] err Details of an error that may have occurred
 /// @return [[string name, int id], ...]
-ArrayOf(Object) buffer_mark_ns_ids(Error *err)
+ArrayOf(Object) nvim_buf_mark_ns_ids(Error *err)
 {
   Array rv = ARRAY_DICT_INIT;
   Array ns_array = ARRAY_DICT_INIT;
@@ -818,7 +818,7 @@ ArrayOf(Object) buffer_mark_ns_ids(Error *err)
 /// @param uower [row, col] or mark_id of upper bound
 /// @param[out] err Details of an error that may have occurred
 /// @return The [[mark_id, row, col], ...] list
-ArrayOf(Integer, 3) buffer_mark_prev(Buffer buffer, Integer namespace, Object id, Error *err)
+ArrayOf(Integer, 3) nvim_buf_mark_prev(Buffer buffer, Integer namespace, Object id, Error *err)
 {
   Array rv = ARRAY_DICT_INIT;
   buf_T *buf = find_buffer_by_handle(buffer, err);
@@ -852,7 +852,7 @@ ArrayOf(Integer, 3) buffer_mark_prev(Buffer buffer, Integer namespace, Object id
 /// @param uower [row, col] or mark_id of upper bound
 /// @param[out] err Details of an error that may have occurred
 /// @return [[mark_id, row, col], ...]
-ArrayOf(Object) buffer_mark_prevrange(Buffer buffer, Integer namespace, Object lower, Object upper, Error *err)
+ArrayOf(Object) nvim_buf_mark_prevrange(Buffer buffer, Integer namespace, Object lower, Object upper, Error *err)
 {
   Array rv = ARRAY_DICT_INIT;
   buf_T *buf = find_buffer_by_handle(buffer, err);
@@ -895,7 +895,7 @@ ArrayOf(Object) buffer_mark_prevrange(Buffer buffer, Integer namespace, Object l
 /// @param col position of the mark
 /// @param[out] err Details of an error that may have occurred
 /// @return 1 on new, 2 on update
-Integer buffer_mark_set(Buffer buffer, Integer namespace, Integer id, Integer row, Integer col, Error *err)
+Integer nvim_buf_mark_set(Buffer buffer, Integer namespace, Integer id, Integer row, Integer col, Error *err)
 {
   Integer rv = 0;
   buf_T *buf = find_buffer_by_handle(buffer, err);
@@ -916,7 +916,7 @@ Integer buffer_mark_set(Buffer buffer, Integer namespace, Integer id, Integer ro
 /// @param id The mark's id
 /// @param[out] err Details of an error that may have occurred
 /// @return 1 on success, 0 on no mark found
-Integer buffer_mark_unset(Buffer buffer, Integer namespace, Integer id, Error *err)
+Integer nvim_buf_mark_unset(Buffer buffer, Integer namespace, Integer id, Error *err)
 {
   Integer rv = 0;
   buf_T *buf = find_buffer_by_handle(buffer, err);
