@@ -1581,8 +1581,18 @@ setmarks:
   if (oap->motion_type == kMTBlockWise) {
     curbuf->b_op_end.lnum = oap->end.lnum;
     curbuf->b_op_end.col = oap->start.col;
-  } else
+    /* Move extended marks */
+    colnr_T mincol = bd.start_vcol + bd.end_vcol;
+    for (lnum = curwin->w_cursor.lnum; lnum <= oap->end.lnum; lnum++) {
+      extmark_col_adjust(curbuf, lnum, mincol, 0, -oap->end.col);
+    }
+
+  } else {
     curbuf->b_op_end = oap->start;
+    /* Move extended marks */
+    colnr_T col_amount = oap->start.col - oap->end.col;
+    extmark_col_adjust(curbuf, oap->start.lnum, oap->end.col, 0, col_amount);
+  }
   curbuf->b_op_start = oap->start;
 
   return OK;
@@ -3112,13 +3122,6 @@ error:
       }
       mark_adjust(curbuf->b_op_start.lnum + (y_type == kMTCharWise),
                   (linenr_T)MAXLNUM, nr_lines, 0L);
-
-      // Extmarks track col changes
-      extmark_col_adjust(curbuf,
-                         curbuf->b_op_start.lnum,
-                         curbuf->b_op_start.col,
-                         nr_lines,
-                         count);
 
       // note changed text for displaying and folding
       if (y_type == kMTCharWise) {

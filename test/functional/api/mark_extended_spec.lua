@@ -181,7 +181,7 @@ describe('Extmarks buffer api', function()
 
   -- TODO throw err if lnum = 0
   it('marks move with line splits #good', function()
-    -- open_line in ops.c
+    -- open_line in misc1.c
     buffer('mark_set', buf, ns, marks[1], 1, 3)
     feed('0a<cr><esc>')
     rv = buffer('mark_index', buf, ns, marks[1])
@@ -208,13 +208,33 @@ describe('Extmarks buffer api', function()
   end)
 
 
-  it('marks move with text inserts #good', function()
+  it('marks move with char inserts #gdbgood', function()
+    -- ins_char_bytes in misc1.c
+    -- extmark_col_adjust(curbuf, lnum, curwin->w_cursor.col, 0, charlen);
+    screen:snapshot_util()
     buffer('mark_set', buf, ns, marks[1], 1, 1)
-    feed('0iabc')
+    feed('0iab')
+    screen:snapshot_util()
     rv = buffer('mark_index', buf, ns, marks[1])
     eq(1, rv[2])
-    -- eq(4, rv[3])
+    eq(3, rv[3])
   end)
 
-end)
+  it('marks move with single line char deletes #good', function()
+    buffer('mark_set', buf, ns, marks[1], 1, 4)
+    feed('02dl')
+    rv = buffer('mark_index', buf, ns, marks[1])
+    eq(1, rv[2])
+    eq(2, rv[3])
+    end)
 
+  it('marks move with multi line char deletes #gdbgood', function()
+    feed('a<cr>12345<esc>h<c-v>hhkd')
+    screen:snapshot_util()
+    buffer('mark_set', buf, ns, marks[1], 2, 5)
+    rv = buffer('mark_index', buf, ns, marks[1])
+    eq(2, rv[2])
+    eq(2, rv[3])
+    end)
+
+end)
