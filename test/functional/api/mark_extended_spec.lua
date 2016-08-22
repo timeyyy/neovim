@@ -176,11 +176,11 @@ describe('Extmarks buffer api', function()
     feed('2GVGJ')
     rv = buffer('mark_index', buf, ns, marks[1])
     eq(2, rv[2])
-    eq(7, rv[3])
+    eq(9, rv[3])
   end)
 
   -- TODO throw err if lnum = 0
-  it('marks move with line splits #bad', function()
+  it('marks move with line splits #good', function()
     -- open_line in ops.c
     buffer('mark_set', buf, ns, marks[1], 1, 3)
     feed('0a<cr><esc>')
@@ -191,11 +191,11 @@ describe('Extmarks buffer api', function()
 
   it('marks move with line deletes #good', function()
     feed("a<cr>222<cr>333<cr>444<esc>")
-    buffer('mark_set', buf, ns, marks[1], 3, 1)
+    buffer('mark_set', buf, ns, marks[1], 3, 2)
     feed('ggdd')
     rv = buffer('mark_index', buf, ns, marks[1])
     eq(2, rv[2])
-    -- eq(1, rv[3])
+    eq(2, rv[3])
   end)
 
   it('marks move with multiline deletes #good', function()
@@ -204,7 +204,7 @@ describe('Extmarks buffer api', function()
     feed('gg2dd')
     rv = buffer('mark_index', buf, ns, marks[1])
     eq(2, rv[2])
-    -- eq(1, rv[3])
+    eq(1, rv[3])
   end)
 
 
