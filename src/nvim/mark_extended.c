@@ -284,10 +284,23 @@ void extmark_free_all(buf_T *buf)
   }
 
 
-#define _col_adjust(mark_lnum, mark_col) \
+#define _col_adjust(m_lnum, m_col) \
   { \
+    lp = m_lnum; \
+    cp = m_col; \
+    if (*lp == lnum && *cp >= mincol) \
+    { \
+      *lp += lnum_amount; \
+      assert(col_amount > INT_MIN && col_amount <= INT_MAX); \
+      if (col_amount < 0 && *cp <= (colnr_T)-col_amount) \
+        *cp = 0; \
+      else \
+        *cp += (colnr_T)col_amount; \
+    } \
   }
 
+/* extmark_adjust will invalidate marks, When this happens */
+/* the function may need to do some repair and call col adjust
 /* Adjust exmarks when changes to columns happen */
 /* We only need to adjust marks on the same line */
 /* This is called from mark_col_adjust as well as */
@@ -295,19 +308,30 @@ void extmark_free_all(buf_T *buf)
 void extmark_col_adjust(buf_T *buf, linenr_T lnum, colnr_T mincol, long lnum_amount, long col_amount)
 {
   linenr_T start;
-  linenr_t end;
-  if ((lnum + lnum_amount) < lnum)
-    start = lnum +lnum_amount
+  linenr_T end;
+  if ((lnum + lnum_amount) < lnum) {
+    start = lnum +lnum_amount;
+    end = lnum;
+  }
+  else {
+    start = lnum;
+    end = lnum +lnum_amount;
+  }
 
-  FOR_ALL_EXTMARKS(buf, lnum, lnum+lnum_amount)
-    if (extmark->line->lnum == lnum && extmark->col >= mincol)
+  linenr_T *lp;
+  colnr_T *cp;
+  FOR_ALL_EXTMARKS(buf, start, end)
+    /* _col_adjust(&(extmark->line->lnum), &(extmark->col)); */
+    lp = &(extmark->line->lnum);
+    cp = &(extmark->col);
+    if (*lp == lnum && *cp >= mincol)
     {
-      extmark->line->lnum += lnum_amount;
+      *lp += lnum_amount;
       assert(col_amount > INT_MIN && col_amount <= INT_MAX);
-      if (col_amount < 0 && extmark->col <= (colnr_T)-col_amount)
-        extmark->col = 0;
+      if (col_amount < 0 && *cp <= (colnr_T)-col_amount)
+        *cp = 0;
       else
-        extmark->col += (colnr_T)col_amount;
+        *cp += (colnr_T)col_amount;
     }
   END_FOR_ALL_EXTMARKS
 }
@@ -328,21 +352,18 @@ void extmark_adjust(buf_T* buf, linenr_T line1, linenr_T line2, long amount, lon
 {
   linenr_T *lp;
   FOR_ALL_EXTMARKLINES(buf)
+    /* _one_adjust(&(extline->lnum)); */
     lp = &(extline->lnum);
-    if (amount_after != 0)
-      *lp += amount_after;
-    /* if (*lp == line1 && *lp == line2) */
-    else if (*lp < line2)
-      *lp += amount;
-    else if (*lp >= line1 && *lp <= line2) {
+    if (*lp >= line1 && *lp <= line2)
+    {
       if (amount == MAXLNUM)
-        *lp = line2+amount_after;
-        /* *lp = line1; */
+        *lp = 0;
       else
         *lp += amount;
     }
-    /* else if (amount_after && *lp > line2) */
-      /* *lp += amount_after; */
+    else if (amount_after && *lp > line2)
+      *lp += amount_after;
+
   END_FOR_ALL_EXTMARKLINES
 }
 

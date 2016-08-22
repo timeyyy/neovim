@@ -746,6 +746,8 @@ open_line (
      * with markers. */
     mark_adjust(curwin->w_cursor.lnum + 1, (linenr_T)MAXLNUM, 1L, 0L);
     did_append = TRUE;
+    /* Move extmarks */
+    extmark_col_adjust(curbuf, less_cols, curwin->w_cursor.lnum, 1, -less_cols);
   } else {
     /*
      * In VREPLACE mode we are starting to replace the next line.
