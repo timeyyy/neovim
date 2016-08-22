@@ -286,15 +286,6 @@ void extmark_free_all(buf_T *buf)
 
 #define _col_adjust(mark_lnum, mark_col) \
   { \
-    if (mark_lnum == lnum && mark_col >= mincol) \
-    { \
-      mark_lnum += lnum_amount; \
-      assert(col_amount > INT_MIN && col_amount <= INT_MAX); \
-      if (col_amount < 0 && mark_col <= (colnr_T)-col_amount) \
-        mark_col = 0; \
-      else \
-        mark_col += (colnr_T)col_amount; \
-    } \
   }
 
 /* Adjust exmarks when changes to columns happen */
@@ -303,8 +294,21 @@ void extmark_free_all(buf_T *buf)
 /* from mark_adjust, and from wherever text edits happen */
 void extmark_col_adjust(buf_T *buf, linenr_T lnum, colnr_T mincol, long lnum_amount, long col_amount)
 {
+  linenr_T start;
+  linenr_t end;
+  if ((lnum + lnum_amount) < lnum)
+    start = lnum +lnum_amount
+
   FOR_ALL_EXTMARKS(buf, lnum, lnum+lnum_amount)
-    _col_adjust(extmark->line->lnum, extmark->col)
+    if (extmark->line->lnum == lnum && extmark->col >= mincol)
+    {
+      extmark->line->lnum += lnum_amount;
+      assert(col_amount > INT_MIN && col_amount <= INT_MAX);
+      if (col_amount < 0 && extmark->col <= (colnr_T)-col_amount)
+        extmark->col = 0;
+      else
+        extmark->col += (colnr_T)col_amount;
+    }
   END_FOR_ALL_EXTMARKS
 }
 
