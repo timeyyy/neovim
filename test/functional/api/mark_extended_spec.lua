@@ -31,7 +31,7 @@ describe('Extmarks buffer api', function()
     helpers.clear()
     helpers.nvim('set_option', 'shell', helpers.nvim_dir .. '/shell-test')
     helpers.nvim('set_option', 'shellcmdflag', 'EXE')
-    screen = Screen.new(20, 10)
+    screen = Screen.new(10, 10)
     screen:attach(false)
 
     insert(init_text)
@@ -221,20 +221,46 @@ describe('Extmarks buffer api', function()
   end)
 
   it('marks move with single line char deletes #good', function()
+    -- op_delete in ops.c
     buffer('mark_set', buf, ns, marks[1], 1, 4)
     feed('02dl')
     rv = buffer('mark_index', buf, ns, marks[1])
     eq(1, rv[2])
     eq(2, rv[3])
-    end)
+  end)
 
   it('marks move with multi line char deletes #gdbgood', function()
+    -- op_delete in ops.c
     feed('a<cr>12345<esc>h<c-v>hhkd')
     screen:snapshot_util()
     buffer('mark_set', buf, ns, marks[1], 2, 5)
     rv = buffer('mark_index', buf, ns, marks[1])
     eq(2, rv[2])
     eq(2, rv[3])
-    end)
+  end)
 
+  it('marks move with P(backward) paste #bad2', function()
+    -- do_put in ops.c
+    buffer('mark_set', buf, ns, marks[1], 1, 3)
+    feed('0veyP')
+    rv = buffer('mark_index', buf, ns, marks[1])
+    eq(1, rv[2])
+    eq(8, rv[3])
+
+    -- spilling over the line works DEPENDS ON THE SCREEN SIZE !
+    feed('0veyP')
+    screen:snapshot_util()
+    eq(2, rv[2])
+    eq(1, rv[3])
+  end)
+
+  it('marks move with p(forward) paste #bad', function()
+    -- do_put in ops.c
+    buffer('mark_set', buf, ns, marks[1], 1, 3)
+    feed('0veyp')
+    screen:snapshot_util()
+    rv = buffer('mark_index', buf, ns, marks[1])
+    eq(1, rv[2])
+    eq(7, rv[3])
+    end)
 end)

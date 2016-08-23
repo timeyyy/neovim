@@ -3182,6 +3182,13 @@ end:
 
   /* If the cursor is past the end of the line put it at the end. */
   adjust_cursor_eol();
+
+  /* adjust extmark for single line  put*/
+  if (dir == -1)
+    extmark_col_adjust(curbuf, lnum, col, 0, STRLEN(y_array)-1);
+  else
+    extmark_col_adjust(curbuf, lnum, col, 0, STRLEN(y_array)-2);
+
 }
 
 /*
