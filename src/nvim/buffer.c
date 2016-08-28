@@ -5134,16 +5134,15 @@ void sign_mark_adjust(linenr_T line1, linenr_T line2, long amount, long amount_a
 
 /// Get reference to line in kbtree_t, allocating it if neccessary.
 BufhlLine *bufhl_tree_ref(kbtree_t(bufhl) *b, linenr_T line, bool put) {
-  BufhlLine t, *p, **pp;
-  t.line = line;
-  pp = kb_get(bufhl, b, &t);
+  BufhlLine t = BUFHLLINE_INIT(line);
+  BufhlLine **pp = kb_get(bufhl, b, &t);
   // IMPORTANT: put() only works if key is absent
   if (pp) {
     return *pp;
   } else if (!put) {
     return NULL;
   }
-  p = xcalloc(sizeof(*p), 1);
+  BufhlLine *p = xcalloc(sizeof(*p), 1);
   p->line = line;
   // p->items zero initialized
   kb_put(bufhl, b, p);
@@ -5217,7 +5216,7 @@ void bufhl_clear_line_range(buf_T *buf,
   linenr_T first_changed = MAXLNUM, last_changed = -1;
 
   kbitr_t(bufhl) itr;
-  BufhlLine *l, t = {line_start};
+  BufhlLine *l, t = BUFHLLINE_INIT(line_start);
   if (!kb_itr_get(bufhl, &buf->b_bufhl_info, &t, &itr)) {
     kb_itr_next(bufhl, &buf->b_bufhl_info, &itr);
   }
@@ -5299,7 +5298,7 @@ void bufhl_mark_adjust(buf_T* buf,
   // we need to detect this case and
 
   kbitr_t(bufhl) itr;
-  BufhlLine *l, t = {line1};
+  BufhlLine *l, t = BUFHLLINE_INIT(line1);
   if (!kb_itr_get(bufhl, &buf->b_bufhl_info, &t, &itr)) {
     kb_itr_next(bufhl, &buf->b_bufhl_info, &itr);
   }
