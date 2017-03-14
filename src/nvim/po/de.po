@@ -22,296 +22,273 @@ msgstr ""
 #: ../api/buffer.c:170 ../api/buffer.c:281
 #, fuzzy
 msgid "Index out of bounds"
-msgstr "nicht gefunden "
+msgstr "Index out of bounds"
 
 #: ../api/buffer.c:186
-#, fuzzy
 msgid "Line index is too high"
-msgstr "Fensterindex außerhalb des zulässigen Bereichs"
+msgstr "Zeilenindex ist zu groß"
 
 #: ../api/buffer.c:289
 msgid "Argument \"start\" is higher than \"end\""
-msgstr ""
+msgstr "Argument \"start\" is größer als \"end\""
 
 #: ../api/buffer.c:304
 msgid "All items in the replacement array must be strings"
-msgstr ""
+msgstr "Alle List-Einträge in Ersatzarray müssen Zeichenfolgen sein"
 
 #: ../api/buffer.c:315
 msgid "string cannot contain newlines"
-msgstr "Zeichenfolge kann keine Zeilenwechsel enthalten"
+msgstr "Zeichenfolge kann keine Zeilenumbrüche enthalten"
 
 #: ../api/buffer.c:328 ../ops.c:2729
-#, fuzzy
 msgid "Failed to save undo information"
-msgstr "kann Information für die Wiederherstellung nicht speichern"
+msgstr "Speichern der Wiederherstellunginfo gescheitert"
 
 #: ../api/buffer.c:338
-#, fuzzy
 msgid "Failed to delete line"
-msgstr "Zeile kann nicht gelöscht werden"
+msgstr "Löschen der Zeile gescheitert"
 
 #: ../api/buffer.c:355 ../api/buffer.c:373
 msgid "Index value is too high"
-msgstr ""
+msgstr "Indexwert ist zu groß"
 
 #: ../api/buffer.c:360
-#, fuzzy
 msgid "Failed to replace line"
-msgstr "Zeile kann nicht ersetzt werden"
+msgstr "Ersetzen der Zeile gescheitert"
 
 #: ../api/buffer.c:378
-#, fuzzy
 msgid "Failed to insert line"
-msgstr "Zeile kann nicht eingefügt werden"
+msgstr "Einfügung der Zeile gescheitert"
 
 #: ../api/buffer.c:616
-#, fuzzy
 msgid "Failed to rename buffer"
-msgstr "E222: Zum Lesepuffer hinzufügen"
+msgstr "Umbenennung der Lesepuffer gescheitert"
 
 #: ../api/buffer.c:665
 msgid "Mark name must be a single character"
-msgstr ""
+msgstr "Name einer Markierung muss ein Einzelzeichen sein"
 
 #: ../api/buffer.c:683
-#, fuzzy
 msgid "Invalid mark name"
-msgstr "ungültiger Name einer Markierung"
+msgstr "Ungültiger Name einer Markierung"
 
 #: ../api/buffer.c:737 ../api/buffer.c:777
-#, fuzzy
 msgid "Line number outside range"
 msgstr "Zeilennummer außerhalb des zulässigen Bereichs"
 
 #: ../api/buffer.c:741 ../api/window.c:80
-#, fuzzy
 msgid "Column value outside range"
-msgstr "Zeilennummer außerhalb des zulässigen Bereichs"
+msgstr "Spaltennummer außerhalb des zulässigen Bereichs"
 
 #: ../api/private/helpers.c:60
-#, fuzzy
 msgid "Keyboard interrupt"
 msgstr "Tastatur-Unterbrechung"
 
 #: ../api/private/helpers.c:93
-#, fuzzy
 msgid "Key not found"
-msgstr "nicht gefunden "
+msgstr "Pfad nicht gefunden "
 
 #: ../api/private/helpers.c:118
 #, fuzzy
 msgid "Dictionary is locked"
-msgstr "E715: Dictionary benötigt"
+msgstr "Dictionary gesperrt"
 
 #: ../api/private/helpers.c:123
 msgid "Empty variable names aren't allowed"
-msgstr ""
+msgstr "Variablennamen können nicht leer sein"
 
 #: ../api/private/helpers.c:128
-#, fuzzy
 msgid "Key length is too high"
 msgstr "Die Länge des Pfads ist zu groß!"
 
 #: ../api/private/helpers.c:136
 #, c-format
 msgid "Key is read-only: %s"
-msgstr ""
+msgstr "Schlüssel ist schreibgeschützt: %s"
 
 #: ../api/private/helpers.c:139
 #, c-format
 msgid "Key is fixed: %s"
-msgstr ""
+msgstr "Schlüssel ist fest: %s"
 
 #: ../api/private/helpers.c:142
-#, fuzzy, c-format
+#, c-format
 msgid "Key is locked: %s"
-msgstr "E741: Wert ist gesperrt: %s"
+msgstr "Schlüssel ist gesperrt: %s"
 
 #. Doesn't exist, fail
 #: ../api/private/helpers.c:151
-#, fuzzy, c-format
+#, c-format
 msgid "Key \"%s\" doesn't exist"
-msgstr "Die Datei \"%s\" existiert nicht"
+msgstr "Schlüssel \"%s\" existiert nicht"
 
 #: ../api/private/helpers.c:205 ../api/private/helpers.c:260
-#, fuzzy
 msgid "Empty option name"
-msgstr "E792: Leerer Menüname"
+msgstr "Leerer Optionnüname"
 
 #: ../api/private/helpers.c:218 ../api/private/helpers.c:269
-#, fuzzy, c-format
+#, c-format
 msgid "Invalid option name \"%s\""
-msgstr "E755: Ungültige Region in %s"
+msgstr "Ungültige Optionname \"%s\""
 
 #: ../api/private/helpers.c:237
-#, fuzzy, c-format
+#, c-format
 msgid "Unable to get value for option \"%s\""
 msgstr "Kann Optionswert nicht ermitteln"
 
 #: ../api/private/helpers.c:243
-#, fuzzy, c-format
+#, c-format
 msgid "Unknown type for option \"%s\""
-msgstr "E355: Unbekannte Option: %s"
+msgstr "Unbekannte Typ für Option: \"%s\""
 
 #: ../api/private/helpers.c:278
-#, fuzzy, c-format
+#, c-format
 msgid "Unable to unset option \"%s\""
-msgstr "Kann Optionswert nicht ermitteln"
+msgstr "Kann Optionswert nicht abstellen"
 
 #: ../api/private/helpers.c:284
 #, c-format
 msgid "Cannot unset option \"%s\" because it doesn't have a global value"
-msgstr ""
+msgstr "Option \"%s\" kann nicht abgestellt werden weil er nicht global ist"
 
 #: ../api/private/helpers.c:300
 #, c-format
 msgid "Option \"%s\" requires a boolean value"
-msgstr ""
+msgstr "Option \"%s\" benötigt ein Wert"
 
 #: ../api/private/helpers.c:311
-#, fuzzy, c-format
+#, c-format
 msgid "Option \"%s\" requires an integer value"
-msgstr "E709: [:] benötigt List"
+msgstr "Option \"%s\" benötigt ein Ganzzahl"
 
 #: ../api/private/helpers.c:319
 #, c-format
 msgid "Value for option \"%s\" is outside range"
-msgstr ""
+msgstr "Option \"%s\" ist außerhalb des zulässigen Bereichs"
 
 #: ../api/private/helpers.c:330
-#, fuzzy, c-format
+#, c-format
 msgid "Option \"%s\" requires a string value"
-msgstr "E709: [:] benötigt List"
+msgstr "Option \"%s\" benötigt ein Zeichenfolge"
 
 #: ../api/private/helpers.c:563
-#, fuzzy
 msgid "Invalid buffer id"
-msgstr "ungültige Puffernummer"
+msgstr "Ungültige Puffernummer"
 
 #: ../api/private/helpers.c:578
-#, fuzzy
 msgid "Invalid window id"
-msgstr "E900: Ungültige Job-ID"
+msgstr "Ungültige Fenster-ID"
 
 #: ../api/private/helpers.c:593
-#, fuzzy
 msgid "Invalid tabpage id"
-msgstr "E900: Ungültige Job-ID"
+msgstr "Ungültige Seitenreiter-ID"
 
 #: ../api/private/helpers.c:661
 msgid "Integer value outside range"
-msgstr ""
+msgstr "Ganzzahl außerhalb des zulässigen Bereichs"
 
 #: ../api/private/helpers.c:716
 msgid "Empty dictionary keys aren't allowed"
-msgstr ""
+msgstr "Dictionary Schlüssel können nicht leer sein"
 
 #: ../api/private/helpers.c:930
 msgid "Problem while switching windows"
-msgstr ""
+msgstr "Problem beim Fensterwechsel "
 
 #: ../api/ui.c:54
-#, fuzzy
 msgid "UI already attached for channel"
-msgstr "Bereits bei der ältesten Änderung"
+msgstr "Benutzeroberfläche beriets verbunden mit einem Kanal"
 
 #: ../api/ui.c:60 ../api/ui.c:142
 msgid "Expected width > 0 and height > 0"
-msgstr ""
+msgstr "Breite > 0 und Höhe > 0 erwartet"
 
 #: ../api/ui.c:124 ../api/ui.c:136 ../api/ui.c:157
 msgid "UI is not attached for channel"
-msgstr ""
+msgstr "Benutzeroberfläche ist mit einem Kanal nicht verbunden"
 
 #: ../api/ui.c:171
 msgid "rgb must be a Boolean"
-msgstr ""
+msgstr "RGB muss boolesch sein"
 
 #: ../api/ui.c:178
 msgid "popupmenu_external must be a Boolean"
-msgstr ""
+msgstr "popupmenu_external muss boolesch sein"
 
 #: ../api/ui.c:183
-#, fuzzy
 msgid "No such ui option"
-msgstr "E24: Keine Abkürzung gefunden"
+msgstr "Keine Benutzeroberflächeoption gefunden"
 
 #: ../api/vim.c:182
-#, fuzzy
 msgid "Failed to evaluate expression"
-msgstr "ungültiger Ausdruck"
+msgstr "Bewerten des Ausdrucks gescheitert"
 
 #: ../api/vim.c:207
 msgid "Function called with too many arguments."
-msgstr ""
+msgstr "Funktion aufgerufen mit zu vielen Argumenten"
 
 #: ../api/vim.c:229
 msgid "Error calling function."
-msgstr ""
+msgstr "Fehler bei aufrufen der Funktion"
 
 #: ../api/vim.c:253
-#, fuzzy
 msgid "String length is too high"
-msgstr "Die Länge des Pfads ist zu groß!"
+msgstr "Zeichenkette zu lang"
 
 #: ../api/vim.c:307
 msgid "Directory string is too long"
-msgstr ""
+msgstr "Verzeichniszeichenkette zu lang"
 
 #: ../api/vim.c:319
-#, fuzzy
 msgid "Failed to change directory"
-msgstr "ist ein Verzeichnis"
+msgstr "Verzeichniswechsel gescheitert"
 
 #: ../api/vim.c:514
 #, c-format
 msgid "Failed to switch to buffer %d"
-msgstr ""
+msgstr "Wechsel zu %d des Puffers gescheitert"
 
 #: ../api/vim.c:564
 #, c-format
 msgid "Failed to switch to window %d"
-msgstr ""
+msgstr "Wechsel zu %d der Fenster gescheitert"
 
 #: ../api/vim.c:615
 #, c-format
 msgid "Failed to switch to tabpage %d"
-msgstr ""
+msgstr "Wechsel zu %d des Seitenreiters gescheitert"
 
 #: ../api/vim.c:712
 msgid "All items in calls array must be arrays"
-msgstr ""
+msgstr "Alle Einträge in Aufrufearray müssen Arrays sein"
 
 #: ../api/vim.c:719
 msgid "All items in calls array must be arrays of size 2"
-msgstr ""
+msgstr "Alle Einträge in Aufrufearray müssen Arrays mit Größe 2 sein"
 
 #: ../api/vim.c:726
 msgid "name must be String"
-msgstr ""
+msgstr "Name muss ein Zeichenkette sein"
 
 #: ../api/vim.c:734
 msgid "args must be Array"
-msgstr ""
+msgstr "args muss ein Array sein"
 
 #: ../api/window.c:63
-#, fuzzy
 msgid "Argument \"pos\" must be a [row, col] array"
-msgstr "E712: Argument von %s muss vom Typ List oder Dictionary sein"
+msgstr "Argument \"pos\" muss ein Array [Zeile, Spalte] sein"
 
 #: ../api/window.c:75
-#, fuzzy
 msgid "Cursor position outside buffer"
 msgstr "Cursor Position außerhalb des Puffers"
 
 #: ../api/window.c:127
 msgid "Height value outside range"
-msgstr ""
+msgstr "Höhe außerhalb des zulässigen Bereichs"
 
 #: ../api/window.c:170
 msgid "Width value outside range"
-msgstr ""
+msgstr "Breite außerhalb des zulässigen Bereichs"
 
 #: ../buffer.c:77
 msgid "[Location List]"
@@ -976,11 +953,11 @@ msgstr "E697: Fehlendes List-Ende ']': %s"
 
 #: ../eval.c:6027
 msgid "Not enough memory to set references, garbage collection aborted!"
-msgstr ""
+msgstr "nicht genügend Arbeitsspeicher um Referenzen zu setzen, Garbage Collection abgebrochen"
 
 #: ../eval.c:6758
 msgid "Argument is not a function or function name"
-msgstr ""
+msgstr "Argument ist keine Funktion oder Funktionname"
 
 #: ../eval.c:6844
 #, c-format
@@ -1100,28 +1077,24 @@ msgid "E700: Unknown function: %s"
 msgstr "E700: Unbekannte Funktion: %s"
 
 #: ../eval.c:10152
-#, fuzzy
 msgid "E922: expected a dict"
-msgstr "E268: Unerwartetes 'next'"
+msgstr "E922: Dict erwartet"
 
 #: ../eval.c:10162
-#, fuzzy
 msgid "E923: Second argument of function() must be a list or a dict"
-msgstr "E712: Argument von %s muss vom Typ List oder Dictionary sein"
+msgstr "E923: Zweiteargument der Funktion muss eine Liste oder Dict sein"
 
 #: ../eval.c:10872 ../eval.c:11990
-#, fuzzy
 msgid "E5000: Cannot find tab number."
-msgstr "E695: Kann Funcref nicht indizieren"
+msgstr "E5000: Kann Reternummer nicht finden."
 
 #: ../eval.c:10880 ../eval.c:11998
 msgid "E5001: Higher scope cannot be -1 if lower scope is >= 0."
-msgstr ""
+msgstr "E5001: Higher scope kann nicht -1  sein wenn lower scope >= 0 ist."
 
 #: ../eval.c:10887 ../eval.c:12005
-#, fuzzy
 msgid "E5002: Cannot find window number."
-msgstr "E671: Kann Fenstertitel \"%s\" nicht finden"
+msgstr "E5002: Kann Fensternummer nicht finden."
 
 #: ../eval.c:12418
 msgid "called inputrestore() more often than inputsave()"
@@ -1137,42 +1110,42 @@ msgstr "E786: Bereich nicht erlaubt"
 
 #: ../eval.c:12655 ../eval.c:12661
 msgid "Invalid stream on rpc job, use jobclose(id, 'rpc')"
-msgstr ""
+msgstr "Ungültig Datenstrom auf RPC job, verwend jobclose(id, 'rpc')"
 
 #: ../eval.c:12671
 msgid "Invalid job stream: Not an rpc job"
-msgstr ""
+msgstr "Ungültig Jobdatenstrom: Nicht en RPC job"
 
 #: ../eval.c:12674
 #, c-format
 msgid "Invalid job stream \"%s\""
-msgstr ""
+msgstr "Ungültig Jobdatenstrom \"%s\""
 
 #: ../eval.c:12738
 msgid "Can't send data to the job: stdin is closed"
-msgstr ""
+msgstr "Könnte keine Datei schicken: StdIn ist geschlossen"
 
 #: ../eval.c:12743
 msgid "Can't send raw data to rpc channel"
-msgstr ""
+msgstr "Könnte keine Rohdaten an RPC Kanal schicken"
 
 #: ../eval.c:13107
 msgid "E474: Failed to convert list to string"
-msgstr ""
+msgstr "E474: Konnte nicht Liste zu Zeichenkette konvertieren"
 
 #: ../eval.c:13124
-#, fuzzy, c-format
+#, c-format
 msgid "E474: Failed to parse %.*s"
-msgstr "E241: Kann nicht zu %s senden"
+msgstr "E474: Konnte nicht %.*s parsen"
 
 #: ../eval.c:13185
 msgid "E701: Invalid type for len()"
 msgstr "E701: Unzulässiger Typ für len()"
 
 #: ../eval.c:13937
-#, fuzzy, c-format
+#, c-format
 msgid "msgpackdump() argument, index %i"
-msgstr "map()-Argument"
+msgstr "msgpackdump() argument, index %i"
 
 #: ../eval.c:14200
 msgid "E726: Stride is zero"
@@ -1199,9 +1172,9 @@ msgid "reverse() argument"
 msgstr "reverse()-Argument"
 
 #: ../eval.c:15790
-#, fuzzy, c-format
+#, c-format
 msgid "E927: Invalid action: '%s'"
-msgstr "E383: Unzulässiges Suchmuster: %s"
+msgstr "E927: Ungültige Aktion: '%s'"
 
 #: ../eval.c:16447
 msgid "sort() argument"
@@ -1224,66 +1197,61 @@ msgid "(Invalid)"
 msgstr "(Ungültig)"
 
 #: ../eval.c:17205
-#, fuzzy, c-format
+#, c-format
 msgid "E935: invalid submatch number: %d"
-msgstr "E354: Ungültiger Registername: '%s'"
+msgstr "E935: Ungültig submatch nummer: %d"
 
 #: ../eval.c:17725
 msgid "Can only call this function in an unmodified buffer"
-msgstr ""
+msgstr "Funktion kann nur in eine unveränderten Puffern aufgerufen werden"
 
 #: ../eval.c:17830
-#, fuzzy
 msgid "E921: Invalid callback argument"
-msgstr "E474: Ungültiges Argument"
+msgstr "E921: Ungültiges Rückrufargument"
 
 #: ../eval.c:18583
-#, fuzzy, c-format
+#c-format
 msgid "E80: Error while writing: %s"
-msgstr "E80: Fehler während des Schreibens"
+msgstr "E80: Fehler während des Schreibens: %s"
 
 #: ../eval.c:18734
-#, fuzzy
 msgid "E482: Can't open file with an empty name"
-msgstr "E212: Datei kann nicht zum Schreiben geöffnet werden"
+msgstr "E482: Könnte Datei nicht öffnen: Name ist leer"
 
 #: ../eval.c:18738
-#, fuzzy, c-format
+#, c-format
 msgid "E482: Can't open file %s for writing: %s"
-msgstr "E212: Datei kann nicht zum Schreiben geöffnet werden"
+msgstr "E482: Könnte Datei %s zum Schreiben nicht öffnen %s"
 
 #: ../eval.c:18745
-#, fuzzy, c-format
+#, c-format
 msgid "E80: Error when closing file %s: %s"
-msgstr "E209: Fehler beim Schließen von \"%s\""
+msgstr "E80: Fehler beim Schließen der Datei %s: %s"
 
 #: ../eval.c:19457
-#, fuzzy, c-format
+#, c-format
 msgid "E121: Undefined variable: %.*s"
-msgstr "E121: Nicht definierte Variable: %s"
+msgstr "E121: Variable nicht definiert: %.*s"
 
 #: ../eval.c:19943
-#, fuzzy
 msgid "E805: Expected a Number or a String, Float found"
-msgstr "E807: Float-Argument für printf() erwartet"
+msgstr "E805: Nummer oder Zeichenkette erwartet, Gleitkommazahl gefunden."
 
 #: ../eval.c:19948
 msgid "E703: Expected a Number or a String, Funcref found"
-msgstr ""
+msgstr "E703: Nummer oder Zeichenkette erwartet, Funcref gefunden."
 
 #: ../eval.c:19952
-#, fuzzy
 msgid "E745: Expected a Number or a String, List found"
-msgstr "E807: Float-Argument für printf() erwartet"
+msgstr "E745: Nummer oder Zeichenkette erwartet, Liste gefunden"
 
 #: ../eval.c:19956
 msgid "E728: Expected a Number or a String, Dictionary found"
-msgstr ""
+msgstr "E728: Nummer oder Zeichenkette erwartet, Dictionary gefunden"
 
 #: ../eval.c:19960
-#, fuzzy
 msgid "E5300: Expected a Number or a String"
-msgstr "E807: Float-Argument für printf() erwartet"
+msgstr "E807: Nummer oder Zeichenkette erwartet"
 
 #: ../eval.c:19995
 msgid "E805: Using a Float as a Number"
@@ -1302,24 +1270,20 @@ msgid "E728: Using a Dictionary as a Number"
 msgstr "E728: Dictionary als Number verwendet"
 
 #: ../eval.c:20047
-#, fuzzy
 msgid "E891: Using a Funcref as a Float"
-msgstr "E703: Funcref als Number verwendet"
+msgstr "E891: Funcref als Gleitkommazahl verwendet"
 
 #: ../eval.c:20050
-#, fuzzy
 msgid "E892: Using a String as a Float"
-msgstr "E728: Dictionary als Number verwendet"
+msgstr "E892: Zeichenkette als Gleitkommazahl verwendet"
 
 #: ../eval.c:20053
-#, fuzzy
 msgid "E893: Using a List as a Float"
-msgstr "E745: List als Number verwendet"
+msgstr "E893: List als Gleitkommazahl verwendet"
 
 #: ../eval.c:20056
-#, fuzzy
 msgid "E894: Using a Dictionary as a Float"
-msgstr "E728: Dictionary als Number verwendet"
+msgstr "E894: Dictionary als Gleitkommazahl verwendet"
 
 #: ../eval.c:20144
 msgid "E729: using Funcref as a String"
@@ -1334,19 +1298,18 @@ msgid "E731: using Dictionary as a String"
 msgstr "E731: Dictionary als String verwendet"
 
 #: ../eval.c:20163
-#, fuzzy
 msgid "E908: using an invalid value as a String"
-msgstr "E806: Float als String verwendet"
+msgstr "E806: Ungültiger Wert als Zeichenkette verwendet"
 
 #: ../eval.c:20703
-#, fuzzy, c-format
+#, c-format
 msgid "E794: Cannot set variable in the sandbox: \"%.*s\""
-msgstr "E794: Variable \"%s\" kann in der Sandbox nicht gesetzt werden"
+msgstr "E794: Variable \"%.*s\" kann in der Sandbox nicht gesetzt werden"
 
 #: ../eval.c:20724
-#, fuzzy, c-format
+#, c-format
 msgid "E795: Cannot delete variable %.*s"
-msgstr "E795: Kann Variable %s nicht löschen"
+msgstr "E795: Kann Variable %.*s nicht löschen"
 
 #: ../eval.c:20744
 #, c-format
@@ -7161,32 +7124,28 @@ msgid "by Bram Moolenaar et al."
 msgstr "von Bram Moolenaar und Anderen"
 
 #: ../version.c:2709
-#, fuzzy
 msgid "Nvim is open source and freely distributable"
-msgstr "Vim ist Open Source und kann frei weitergegeben werden"
+msgstr "NVim ist Open Source und kann frei weitergegeben werden"
 
 #: ../version.c:2710
 msgid "https://neovim.io/community"
-msgstr ""
+msgstr "https://neovim.io/community"
 
 #: ../version.c:2712
-#, fuzzy
-msgid "type  :help nvim<Enter>       if you are new! "
-msgstr "Tippe  :help iccf<Enter>        für Informationen darüber "
+msgid  "type  :help nvim<Enter>       if you are new! "
+msgstr "Tippe  :help nvim<Enter>        wenn Sie neu sind"
 
 #: ../version.c:2713
-#, fuzzy
 msgid "type  :CheckHealth<Enter>     to optimize Nvim"
-msgstr "Bitte  :quit<Enter>  eingeben um Vim zu verlassen"
+msgstr "Tippe  :CheckHealth<Enter>      um Nvim zu optimieren"
 
 #: ../version.c:2714
 msgid "type  :q<Enter>               to exit         "
 msgstr "Tippe  :q<Enter>                zum Beenden               "
 
 #: ../version.c:2715
-#, fuzzy
 msgid "type  :help<Enter>            for help        "
-msgstr "Tippe  :q<Enter>                zum Beenden               "
+msgstr "Tippe  :help<Enter>             für Hilfe                 "
 
 #: ../version.c:2717
 msgid "Help poor children in Uganda!"
@@ -7257,9 +7216,8 @@ msgid "E446: No file name under cursor"
 msgstr "E446: Kein Dateiname unter dem Cursor"
 
 #: ../window.c:5576
-#, fuzzy
 msgid "List or number required"
-msgstr "E714: List benötigt"
+msgstr "Liste oder Nummer benötigt"
 
 #~ msgid "internal error: unknown option type"
 #~ msgstr "interner Fehler: unbekannter Optionstyp"
