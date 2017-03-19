@@ -754,13 +754,13 @@ open_line (
     // Postpone calling changed_lines(), because it would mess up folding
     // with markers.
 
-   // TODO(timeyyy): Apply this check to the extmarks?
-   // Skip mark_adjust when adding a line after the last one, there can't
-   // be marks there.
-   if (curwin->w_cursor.lnum + 1 < curbuf->b_ml.ml_line_count) {
-     mark_adjust(curwin->w_cursor.lnum + 1, (linenr_T)MAXLNUM, 1L, 0L, false);
-    }
-    did_append = true;
+  // TODO(timeyyy): Apply this check to the extmarks?
+  // Skip mark_adjust when adding a line after the last one, there can't
+  // be marks there.
+  if (curwin->w_cursor.lnum + 1 < curbuf->b_ml.ml_line_count) {
+    mark_adjust(curwin->w_cursor.lnum + 1, (linenr_T)MAXLNUM, 1L, 0L, false);
+  }
+  did_append = true;
   } else {
     /*
      * In VREPLACE mode we are starting to replace the next line.
