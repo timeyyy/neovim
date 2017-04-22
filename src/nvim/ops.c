@@ -317,7 +317,7 @@ void shift_line(
                      mincol,
                      0,
                      col_amount,
-                     extmarkNoReverse);
+                     kExtmarkNoReverse);
 }
 
 /*
@@ -493,7 +493,7 @@ static void shift_block(oparg_T *oap, int amount)
     col_amount = -col_amount;
   }
   extmark_col_adjust(curbuf, curwin->w_cursor.lnum,
-                     curwin->w_cursor.col, 0, col_amount, extmarkNoReverse);
+                     curwin->w_cursor.col, 0, col_amount, kExtmarkNoReverse);
 }
 
 /*
@@ -1616,7 +1616,7 @@ setmarks:
     colnr_T col_amount = n;
     for (lnum = curwin->w_cursor.lnum; lnum <= oap->end.lnum; lnum++) {
       extmark_col_adjust(curbuf,
-                         lnum, mincol, 0, -col_amount, extmarkNoReverse);
+                         lnum, mincol, 0, -col_amount, kExtmarkNoReverse);
     }
 
   } else {
@@ -1802,7 +1802,7 @@ int op_replace(oparg_T *oap, int c)
             oap->end.col += (*mb_char2len)(c) - (*mb_char2len)(n);
           n = State;
           State = REPLACE;
-          ins_char(c, false);
+          ins_char(c);
           State = n;
           /* Backup to the replaced character. */
           dec_cursor();
@@ -1981,8 +1981,8 @@ int swapchar(int op_type, pos_T *pos)
     /* Special handling of German sharp s: change to "SS". */
     curwin->w_cursor = *pos;
     del_char(false);
-    ins_char('S', false);
-    ins_char('S', false);
+    ins_char('S');
+    ins_char('S');
     curwin->w_cursor = sp;
     inc(pos);
   }
@@ -2010,7 +2010,7 @@ int swapchar(int op_type, pos_T *pos)
       curwin->w_cursor = *pos;
       // don't use del_char(), it also removes composing chars
       del_bytes(utf_ptr2len(get_cursor_pos_ptr()), false, false);
-      ins_char(nc, false);
+      ins_char(nc);
       curwin->w_cursor = sp;
     } else
       pchar(*pos, nc);
@@ -2077,7 +2077,7 @@ void op_insert(oparg_T *oap, long count1)
         if (u_save_cursor() == FAIL)
           return;
         for (i = 0; i < bd.endspaces; i++) {
-          ins_char(' ', false);
+          ins_char(' ');
         }
         bd.textlen += bd.endspaces;
       }
@@ -2176,7 +2176,7 @@ void op_insert(oparg_T *oap, long count1)
   }
   colnr_T col = oap->start.col;
   for (linenr_T lnum = oap->start.lnum; lnum <= oap->end.lnum; lnum++) {
-    extmark_col_adjust(curbuf, lnum, col, 0, 1, extmarkNoReverse);
+    extmark_col_adjust(curbuf, lnum, col, 0, 1, kExtmarkNoReverse);
     }
 }
 
@@ -3213,10 +3213,13 @@ error:
         if (dir == FORWARD)
           curbuf->b_op_start.lnum++;
       }
-      mark_adjust(curbuf->b_op_start.lnum + (y_type == kMTCharWise),
-                  (linenr_T)MAXLNUM, nr_lines, 0L, false);
-      extmark_adjust(curbuf, curbuf->b_op_start.lnum + (y_type == kMTCharWise),
-                     (linenr_T)MAXLNUM, nr_lines, 0L, extmarkNoReverse, false);
+      // Skip mark_adjust when adding lines after the last one, there
+      // can't be marks there.
+      if (curbuf->b_op_start.lnum + (y_type == kMTCharWise) - 1 + nr_lines
+          < curbuf->b_ml.ml_line_count) {
+        mark_adjust(curbuf->b_op_start.lnum + (y_type == kMTCharWise),
+                    (linenr_T)MAXLNUM, nr_lines, 0L, false, kExtmarkNoReverse);
+      }
 
       // note changed text for displaying and folding
       if (y_type == kMTCharWise) {
@@ -3288,11 +3291,11 @@ end:
 
   // Move extmark with char put
   if (y_type == kMTCharWise) {
-    extmark_col_adjust(curbuf, lnum, col, 0, col_amount, extmarkNoReverse);
+    extmark_col_adjust(curbuf, lnum, col, 0, col_amount, kExtmarkNoReverse);
   // Move extmark with blockwise put
   } else if (y_type == kMTBlockWise) {
     for (lnum = curbuf->b_op_start.lnum; lnum <= curbuf->b_op_end.lnum; lnum++) {
-      extmark_col_adjust(curbuf, lnum, col, 0, col_amount, extmarkNoReverse);
+      extmark_col_adjust(curbuf, lnum, col, 0, col_amount, kExtmarkNoReverse);
     }
   }
 }
@@ -3699,7 +3702,7 @@ int do_join(size_t count,
   colnr_T mincol;
   long lnum_amount;
   long col_amount;
-  ExtmarkReverseType reverse;
+  ExtmarkReverse reverse;
   bool marked_end = false;
   bool extmark_added = true;
 
@@ -3729,10 +3732,10 @@ int do_join(size_t count,
     // for undoing is different than the call order to extmark_col_adjust
     if (!(col_amount == 0L && lnum_amount == 0L)) {
       if (t == 0) {
-        reverse = extmarkReverseEnd;
+        reverse = kExtmarkReverseEnd;
         marked_end = true;
       } else {
-        reverse = extmarkReverse;
+        reverse = kExtmarkReverse;
       }
       extmark_added = extmark_col_adjust(curbuf, lnum, mincol, lnum_amount,
                                          col_amount, reverse);
@@ -3740,10 +3743,10 @@ int do_join(size_t count,
 
     if (t == 0) {
       if (extmark_added && !marked_end) {
-        // change the last element to extmarkReverseEnd
+        // change the last element to kExtmarkReverseEnd
         ExtmarkUndoObject undo_info = kv_A(uhp->uh_extmark,
                                            kv_size(uhp->uh_extmark) - 1);
-        undo_info.reverse = extmarkReverseEnd;
+        undo_info.reverse = kExtmarkReverseEnd;
         kv_A(uhp->uh_extmark, kv_size(uhp->uh_extmark) - 1) = undo_info;
       }
 
@@ -4691,7 +4694,7 @@ int do_addsub(int op_type, pos_T *pos, int length, linenr_T Prenum1)
     }
     did_change = true;
     (void)del_char(false);
-    ins_char(firstdigit, false);
+    ins_char(firstdigit);
     endpos = curwin->w_cursor;
     curwin->w_cursor.col = col;
   } else {
