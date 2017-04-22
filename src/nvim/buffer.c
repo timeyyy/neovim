@@ -5180,9 +5180,8 @@ int bufhl_add_hl(buf_T *buf,
                  linenr_T lnum,
                  colnr_T col_start,
                  colnr_T col_end) {
-  static int next_src_id = 1;
   if (src_id == 0) {
-    src_id = next_src_id++;
+    src_id = (int)extmark_namespace_counter++;
   }
   if (hl_id <= 0) {
       // no highlight group or invalid line, just return src_id

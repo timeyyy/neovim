@@ -12,6 +12,8 @@ typedef int colnr_T;
 
 #define MAXLNUM 0x7fffffff     // maximum (invalid) line number
 #define MAXCOL  0x7fffffff     // maximum column number, 31 bits
+#define MINLNUM 1              // minimum line number
+#define MINCOL 1               // minimum column number
 
 /*
  * position in file or buffer
