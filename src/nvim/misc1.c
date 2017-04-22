@@ -758,7 +758,8 @@ open_line (
   // Skip mark_adjust when adding a line after the last one, there can't
   // be marks there.
   if (curwin->w_cursor.lnum + 1 < curbuf->b_ml.ml_line_count) {
-    mark_adjust(curwin->w_cursor.lnum + 1, (linenr_T)MAXLNUM, 1L, 0L, false);
+    mark_adjust(curwin->w_cursor.lnum + 1, (linenr_T)MAXLNUM, 1L, 0L, false,
+                kExtmarkNOOP);
   }
   did_append = true;
   } else {
@@ -933,15 +934,15 @@ theend:
   // Move extmarks
   if (dir == FORWARD) {
       // o or <cr>
-      extmark_adjust(curbuf, lnum+1, lnum+1, 1, 1, extmarkNoReverse, false);
+      extmark_adjust(curbuf, lnum+1, lnum+1, 1, 1, kExtmarkNoReverse, false);
       if (extra_len != 0) {
         // <cr>
         extmark_col_adjust(curbuf,
-                           lnum, mincol, 1, -less_cols, extmarkNoReverse);
+                           lnum, mincol, 1, -less_cols, kExtmarkNoReverse);
       }
   } else {
     // <s-o>
-    extmark_adjust(curbuf, lnum, lnum, 1, 1, extmarkNoReverse, false);
+    extmark_adjust(curbuf, lnum, lnum, 1, 1, kExtmarkNoReverse, false);
   }
 
   return retval;
@@ -1397,11 +1398,11 @@ void ins_bytes_len(char_u *p, size_t len)
       } else {
         n = (size_t)(*mb_ptr2len)(p + i);
       }
-      ins_char_bytes(p + i, n, false);
+      ins_char_bytes(p + i, n);
     }
   } else {
     for (size_t i = 0; i < len; i++) {
-      ins_char(p[i], false);
+      ins_char(p[i]);
     }
   }
 }
@@ -1411,7 +1412,7 @@ void ins_bytes_len(char_u *p, size_t len)
 /// Caller must have prepared for undo.
 /// For multi-byte characters we get the whole character, the caller must
 /// convert bytes to a character.
-void ins_char(int c, bool extmark_move)
+void ins_char(int c)
 {
   char_u buf[MB_MAXBYTES + 1];
   size_t n = (size_t)(*mb_char2bytes)(c, buf);
@@ -1421,10 +1422,10 @@ void ins_char(int c, bool extmark_move)
   if (buf[0] == 0) {
     buf[0] = '\n';
   }
-  ins_char_bytes(buf, n, extmark_move);
+  ins_char_bytes(buf, n);
 }
 
-void ins_char_bytes(char_u *buf, size_t charlen, bool extmark_move)
+void ins_char_bytes(char_u *buf, size_t charlen)
 {
   // Break tabs if needed.
   if (virtual_active() && curwin->w_cursor.coladd > 0) {
@@ -1533,12 +1534,6 @@ void ins_char_bytes(char_u *buf, size_t charlen, bool extmark_move)
   /*
    * TODO: should try to update w_row here, to avoid recomputing it later.
    */
-
-  // Move extmarks with char inserts
-  if (extmark_move) {
-    extmark_col_adjust(curbuf, lnum, curwin->w_cursor.col, 0,
-                       (long)charlen, extmarkNoReverse);
-  }
 }
 
 /*
@@ -1691,9 +1686,9 @@ int del_bytes(colnr_T count, bool fixpos_arg, bool use_delcombine)
   changed_bytes(lnum, curwin->w_cursor.col);
 
   // Move extmarks with char del or tab with noexpandtab
-  ExtmarkReverseType reverse = extmarkNoReverse;
+  ExtmarkReverse reverse = kExtmarkNoReverse;
   if ((col + count) == oldlen) {
-    reverse = extmarkNoUndo;
+    reverse = kExtmarkNoUndo;
   }
   extmark_col_adjust(curbuf, lnum, col + 1, 0, -count, reverse);
 
@@ -1898,9 +1893,7 @@ void appended_lines(linenr_T lnum, long count)
  */
 void appended_lines_mark(linenr_T lnum, long count)
 {
-  mark_adjust(lnum + 1, (linenr_T)MAXLNUM, count, 0L, false);
-  extmark_adjust(curbuf, lnum + 1, (linenr_T)MAXLNUM, count, 0L,
-                 extmarkNoReverse, false);
+  mark_adjust(lnum + 1, (linenr_T)MAXLNUM, count, 0L, false, kExtmarkNoReverse);
   changed_lines(lnum + 1, 0, lnum + 1, count);
 }
 
@@ -1921,9 +1914,8 @@ void deleted_lines(linenr_T lnum, long count)
  */
 void deleted_lines_mark(linenr_T lnum, long count)
 {
-  mark_adjust(lnum, (linenr_T)(lnum + count - 1), (long)MAXLNUM, -count, false);
-  extmark_adjust(curbuf, lnum, (linenr_T)(lnum + count - 1),
-                 (long)MAXLNUM, -count, extmarkNoReverse, false);
+  mark_adjust(lnum, (linenr_T)(lnum + count - 1), (long)MAXLNUM, -count, false,
+              kExtmarkNoReverse);
   changed_lines(lnum, 0, lnum + count, -count);
 }
 
