@@ -64,6 +64,7 @@
 #include "nvim/spell.h"
 #include "nvim/strings.h"
 #include "nvim/syntax.h"
+#include "nvim/tag_extended.h"
 #include "nvim/terminal.h"
 #include "nvim/ui.h"
 #include "nvim/undo.h"
@@ -722,6 +723,8 @@ free_buffer_stuff (
   uc_clear(&buf->b_ucmds);              // clear local user commands
   buf_delete_signs(buf);                // delete any signs
   extmark_free_all(buf);                // delete any extmarks
+  bufhl_clear_all(buf);                 // delete any highligts
+  exttag_free_all(buf);                 // delete any exttags
   bufhl_clear_all(buf);                 // delete any highligts
   map_clear_int(buf, MAP_ALL_MODES, true, false);    // clear local mappings
   map_clear_int(buf, MAP_ALL_MODES, true, true);     // clear local abbrevs

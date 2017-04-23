@@ -762,6 +762,8 @@ struct file_buffer {
   IntMap *b_extmark_ns;         // extmark namespaces
   kbtree_t(extlines) b_extlines; // extmarks
   kvec_t(ExtMarkLine *) b_extmark_move_space; // temp space for extmarks
+
+  IntMap *b_exttag_ns;
 };
 
 /*

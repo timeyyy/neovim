@@ -143,12 +143,12 @@ ExtmarkArray extmark_get(buf_T *buf,
   return array;
 }
 
-static bool extmark_create(buf_T *buf,
-                           uint64_t ns,
-                           uint64_t id,
-                           linenr_T lnum,
-                           colnr_T col,
-                           ExtmarkReverse undo)
+bool extmark_create(buf_T *buf,
+                    uint64_t ns,
+                    uint64_t id,
+                    linenr_T lnum,
+                    colnr_T col,
+                    ExtmarkReverse undo)
 {
   if (!buf->b_extmark_ns) {
     buf->b_extmark_ns = pmap_new(uint64_t)();

@@ -22,6 +22,7 @@
 #include "nvim/map.h"
 #include "nvim/mark.h"
 #include "nvim/mark_extended.h"
+#include "nvim/tag_extended.h"
 #include "nvim/fileio.h"
 #include "nvim/move.h"
 #include "nvim/syntax.h"
@@ -833,6 +834,91 @@ ArrayOf(Object) nvim_buf_get_marks(Buffer buffer,
 
 }
 
+/// Returns tag info in a range (inclusive)
+/// If there are no tags returns an empty list
+///
+/// @param buffer The buffer handle
+/// @param namespace an id returned previously from exttag_ns_create
+/// @param lower any valid tag identifier (row, col) or tag_id or -1
+/// @param upper any valid tag identifier (row, col) or tag_id or -1
+/// @param amount Maximum number of extmarks to return
+/// @param reverse Decides the search direction in the range
+/// @param[out] err Details of an error that may have occurred
+/// @return [[row, col], ...]
+ArrayOf(Object) nvim_buf_get_tags(Buffer buffer,
+                                  Integer namespace,
+                                  Integer id,
+                                  Object lower,
+                                  Object upper,
+                                  Integer amount,
+                                  Boolean reverse,
+                                  Error *err)
+    FUNC_API_SINCE(1)
+{
+  /* TODO(timeyyy): rename id to tag_name? */
+  Array rv = ARRAY_DICT_INIT;
+  buf_T *buf = find_buffer_by_handle(buffer, err);
+  if (!buf) {
+    return rv;
+  }
+  if (!exttag_ns_initialized((uint64_t)namespace)) {
+    api_set_error(err, Validation, _("Invalid mark namespace"));
+    return rv;
+  }
+
+  if(amount == 0) {
+    api_set_error(err, Validation, _("Amount must be greater than 0"));
+    return rv;
+  }
+  linenr_T l_lnum = (linenr_T)lower.data.array.items[0].data.integer;
+  colnr_T l_col = (colnr_T)lower.data.array.items[1].data.integer;
+  linenr_T u_lnum = (linenr_T)upper.data.array.items[0].data.integer;
+  colnr_T u_col = (colnr_T)upper.data.array.items[1].data.integer;
+
+  ExtmarkArray extmarks_in_range;
+  // Range Query
+  extmarks_in_range = exttag_get(buf, (uint64_t)namespace, (uint64_t)id,
+                                 l_lnum, l_col, u_lnum, u_col, (int64_t)amount,
+                                 reverse ? BACKWARD : FORWARD);
+
+  Array t_tag = ARRAY_DICT_INIT;
+  Array l_tag = ARRAY_DICT_INIT;
+  Array u_tag = ARRAY_DICT_INIT;
+  ExtendedMark *l_mark;
+  ExtendedMark *u_mark;
+
+  size_t step = 2;
+  size_t n = (kv_size(extmarks_in_range) / step);
+  for (size_t i = 0; i < n; i += step) {
+    t_tag.size = 0;
+    t_tag.capacity = 0;
+    t_tag.items = 0;
+    l_tag.size = 0;
+    l_tag.capacity = 0;
+    l_tag.items = 0;
+    u_tag.size = 0;
+    u_tag.capacity = 0;
+    u_tag.items = 0;
+
+    l_mark = kv_A(extmarks_in_range, i);
+    u_mark = kv_A(extmarks_in_range, i+1);
+
+    assert(l_mark);
+    assert(u_mark);
+
+    ADD(l_tag, INTEGER_OBJ((Integer)l_mark->line->lnum));
+    ADD(l_tag, INTEGER_OBJ((Integer)l_mark->col));
+    ADD(u_tag, INTEGER_OBJ((Integer)u_mark->line->lnum));
+    ADD(u_tag, INTEGER_OBJ((Integer)u_mark->col));
+    ADD(t_tag, ARRAY_OBJ(l_tag));
+    ADD(t_tag, ARRAY_OBJ(u_tag));
+    ADD(rv, ARRAY_OBJ(t_tag));
+  }
+
+  kv_destroy(extmarks_in_range);
+  return rv;
+}
+
 /// Create or update a mark at a position
 ///
 /// @param buffer The buffer handle
@@ -895,6 +981,43 @@ Integer nvim_buf_set_mark(Buffer buffer,
   }
 }
 
+/// Create or update a tag at a position
+///
+/// @param buffer The buffer handle
+/// @param id The tag's id
+/// @param lower [row, col]
+/// @param upper [row, col]
+/// @param[out] err Details of an error that may have occurred
+/// @return 1 on success, 0 on fail
+Integer nvim_buf_set_tag(Buffer buffer,
+                         Integer namespace,
+                         Integer id,
+                         Object lower,
+                         Object upper,
+                         Error *err)
+    FUNC_API_SINCE(1)
+{
+  Integer rv = 0;
+  buf_T *buf = find_buffer_by_handle(buffer, err);
+  if (!buf) {
+    return rv;
+  }
+  if (!exttag_ns_initialized((uint64_t)namespace)) {
+    api_set_error(err, Validation, _("Invalid mark namespace"));
+    return rv;
+  }
+
+  // TODO validate range of tag?
+  linenr_T l_lnum = (linenr_T)lower.data.array.items[0].data.integer;
+  colnr_T l_col = (colnr_T)lower.data.array.items[1].data.integer;
+  linenr_T u_lnum = (linenr_T)upper.data.array.items[0].data.integer;
+  colnr_T u_col = (colnr_T)upper.data.array.items[1].data.integer;
+
+  rv = (Integer)exttag_set(buf, (uint64_t)namespace, (uint64_t)id,
+                           l_lnum, l_col, u_lnum, u_col, kExtmarkNoReverse);
+  return rv;
+}
+
 /// Remove a mark
 ///
 /// @param buffer The buffer handle
@@ -921,6 +1044,40 @@ Integer nvim_buf_unset_mark(Buffer buffer,
 
   rv = (Integer)extmark_unset(buf, (uint64_t)namespace, (uint64_t)id,
                               kExtmarkNoReverse);
+  return rv;
+}
+
+/// Remove a tag
+///
+/// @param buffer The buffer handle
+/// @param namespace a identifier returned previously with tag_namespace_create
+/// @param id The tag's id
+/// @param[out] err Details of an error that may have occurred
+/// @return 1 on success, 0 on no mark found
+Integer nvim_buf_unset_tag(Buffer buffer,
+                           Integer namespace,
+                           Integer id,
+                           Object lower,
+                           Object upper,
+                           Error *err)
+    FUNC_API_SINCE(1)
+{
+  Integer rv = 0;
+  buf_T *buf = find_buffer_by_handle(buffer, err);
+  if (!buf) {
+    return rv;
+  }
+  if (!exttag_ns_initialized((uint64_t)namespace)) {
+    api_set_error(err, Validation, _("Invalid tag namespace"));
+    return rv;
+  }
+  // TODO validate range of tag?
+  linenr_T l_lnum = (linenr_T)lower.data.array.items[0].data.integer;
+  colnr_T l_col = (colnr_T)lower.data.array.items[1].data.integer;
+  linenr_T u_lnum = (linenr_T)upper.data.array.items[0].data.integer;
+  colnr_T u_col = (colnr_T)upper.data.array.items[1].data.integer;
+
+  rv = (Integer)exttag_unset(buf, (uint64_t)namespace, (uint64_t)id, l_lnum, l_col, u_lnum, u_col);
   return rv;
 }
 

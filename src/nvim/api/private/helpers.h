@@ -82,7 +82,6 @@
 #define api_free_window(value)
 #define api_free_tabpage(value)
 
-
 #ifdef INCLUDE_GENERATED_DECLARATIONS
 # include "api/private/helpers.h.generated.h"
 #endif

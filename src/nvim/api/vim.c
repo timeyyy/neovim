@@ -29,6 +29,7 @@
 #include "nvim/eval/typval.h"
 #include "nvim/option.h"
 #include "nvim/mark_extended.h"
+#include "nvim/tag_extended.h"
 #include "nvim/syntax.h"
 #include "nvim/getchar.h"
 #include "nvim/os/input.h"
@@ -869,6 +870,50 @@ ArrayOf(Object) nvim_mark_get_ns_ids(Error *err)
   uint64_t key;
   cstr_t value;
   map_foreach(EXTMARK_NAMESPACES, key, value, {
+    ns_array.size = 0;
+    ns_array.capacity = 0;
+    ns_array.items = 0;
+    ADD(ns_array, INTEGER_OBJ((Integer)key));
+    ADD(ns_array, STRING_OBJ(cstr_to_string(value)));
+    ADD(rv, ARRAY_OBJ(ns_array));
+  });
+  return rv;
+}
+
+/// Setup a new namepsace for holding your tags
+///
+/// @param namespace String name for the namespace
+/// @param[out] err Details of an error that may have occurred
+/// @return integer id to be used with future mark_ calls, or 0 if name exists
+Integer nvim_init_tag_ns(String namespace, Error *err)
+    FUNC_API_SINCE(1)
+{
+  uint64_t ns_id = exttag_ns_create(namespace.data);
+  if (!ns_id) {
+    api_set_error(err, Validation, _("Tag namespace already exists"));
+    return 0;
+  }
+  return (Integer)ns_id;
+}
+
+/// Returns a list of tag namespaces
+///
+/// @param[out] err Details of an error that may have occurred
+/// @return [[string name, int id], ...]
+ArrayOf(Object) nvim_get_tag_ns_ids(Error *err)
+    FUNC_API_SINCE(1)
+{
+  Array rv = ARRAY_DICT_INIT;
+  Array ns_array = ARRAY_DICT_INIT;
+
+  if (!EXTTAG_NAMESPACES) {
+    api_set_error(err, Validation, _("No tag namespaces exist"));
+    return rv;
+  }
+
+  uint64_t key;
+  cstr_t value;
+  map_foreach(EXTTAG_NAMESPACES, key, value, {
     ns_array.size = 0;
     ns_array.capacity = 0;
     ns_array.items = 0;
