@@ -32,6 +32,8 @@
 #include <string.h>
 #include <stdint.h>
 
+#include "nvim/memory.h"
+
 #define KB_MAX_DEPTH 64
 
 #define	__KB_KEY(type, x)	(x->key)
@@ -65,24 +67,24 @@
         unsigned int max = 8;											\
 		kbnode_t *x, **top, **stack = 0;								\
 		if (b->root) {													\
-			top = stack = (kbnode_t**)calloc(max, sizeof(kbnode_t*));	\
+			top = stack = (kbnode_t**)xcalloc(max, sizeof(kbnode_t*));	\
 			*top++ = (b)->root;											\
 			while (top != stack) {										\
 				x = *--top;												\
-				if (x->is_internal == 0) { free(x); continue; }			\
+				if (x->is_internal == 0) { xfree(x); continue; }			\
 				for (i = 0; i <= x->n; ++i)								\
 					if (__KB_PTR(b, x)[i]) {							\
 						if (top - stack == (int)max) {		        	\
 							max <<= 1;									\
-							stack = (kbnode_t**)realloc(stack, max * sizeof(kbnode_t*)); \
+							stack = (kbnode_t**)xrealloc(stack, max * sizeof(kbnode_t*)); \
 							top = stack + (max>>1);						\
 						}												\
 						*top++ = __KB_PTR(b, x)[i];						\
 					}													\
-				free(x);												\
+				xfree(x);												\
 			}															\
 		}																\
-		free(stack);											\
+		xfree(stack);											\
 	} while (0)
 
 #define __KB_GET_AUX1(name, key_t, kbnode_t, __cmp)								\
@@ -153,7 +155,7 @@
 	static void __kb_split_##name(kbtree_##name##_t *b, kbnode_t *x, int i, kbnode_t *y) \
 	{																	\
 		kbnode_t *z;													\
-		z = (kbnode_t*)calloc(1, y->is_internal? ILEN : sizeof(kbnode_##name##_t));	\
+		z = (kbnode_t*)xcalloc(1, y->is_internal? ILEN : sizeof(kbnode_##name##_t));	\
 		++b->n_nodes;													\
 		z->is_internal = y->is_internal;								\
 		z->n = T - 1;												\
@@ -190,7 +192,7 @@
 	static key_t *kb_putp_##name(kbtree_##name##_t *b, key_t * __restrict k) \
 	{																	\
 		if (!b->root) { \
-			b->root = (kbnode_t*)calloc(1, ILEN);						\
+			b->root = (kbnode_t*)xcalloc(1, ILEN);						\
 			++b->n_nodes;													\
 		} \
 		kbnode_t *r, *s;												\
@@ -198,7 +200,7 @@
 		r = b->root;													\
 		if (r->n == 2 * T - 1) {										\
 			++b->n_nodes;												\
-			s = (kbnode_t*)calloc(1, ILEN);							\
+			s = (kbnode_t*)xcalloc(1, ILEN);							\
 			b->root = s; s->is_internal = 1; s->n = 0;					\
 			__KB_PTR(b, s)[0] = r;										\
 			__kb_split_##name(b, s, 0, r);								\
@@ -250,7 +252,7 @@
 				memmove(__KB_KEY(key_t, x) + i, __KB_KEY(key_t, x) + i + 1, (unsigned int)(x->n - i - 1) * sizeof(key_t)); \
 				memmove(__KB_PTR(b, x) + i + 1, __KB_PTR(b, x) + i + 2, (unsigned int)(x->n - i - 1) * sizeof(void*)); \
 				--x->n;													\
-				free(z);												\
+				xfree(z);												\
 				return __kb_delp_aux_##name(b, y, k, s);				\
 			}															\
 		}																\
@@ -278,7 +280,7 @@
 				memmove(__KB_KEY(key_t, x) + i - 1, __KB_KEY(key_t, x) + i, (unsigned int)(x->n - i) * sizeof(key_t)); \
 				memmove(__KB_PTR(b, x) + i, __KB_PTR(b, x) + i + 1, (unsigned int)(x->n - i) * sizeof(void*)); \
 				--x->n;													\
-				free(xp);												\
+				xfree(xp);												\
 				xp = y;													\
 			} else if (i < x->n && (y = __KB_PTR(b, x)[i + 1])->n == T - 1) { \
 				__KB_KEY(key_t, xp)[xp->n++] = __KB_KEY(key_t, x)[i];	\
@@ -288,7 +290,7 @@
 				memmove(__KB_KEY(key_t, x) + i, __KB_KEY(key_t, x) + i + 1, (unsigned int)(x->n - i - 1) * sizeof(key_t)); \
 				memmove(__KB_PTR(b, x) + i + 1, __KB_PTR(b, x) + i + 2, (unsigned int)(x->n - i - 1) * sizeof(void*)); \
 				--x->n;													\
-				free(y);												\
+				xfree(y);												\
 			}															\
 		}																\
 		return __kb_delp_aux_##name(b, xp, k, s);						\
@@ -303,7 +305,7 @@
 			--b->n_nodes;												\
 			x = b->root;												\
 			b->root = __KB_PTR(b, x)[0];								\
-			free(x);													\
+			xfree(x);													\
 		}																\
 		return ret;														\
 	}																	\
