@@ -159,12 +159,12 @@
 		++b->n_nodes;													\
 		z->is_internal = y->is_internal;								\
 		z->n = T - 1;												\
-		memcpy(__KB_KEY(key_t, z), __KB_KEY(key_t, y) + T, sizeof(key_t) * (T - 1)); \
-		if (y->is_internal) memcpy(__KB_PTR(b, z), __KB_PTR(b, y) + T, sizeof(void*) * T); \
+		memcpy(__KB_KEY(key_t, z), &__KB_KEY(key_t, y)[T], sizeof(key_t) * (T - 1)); \
+		if (y->is_internal) memcpy(__KB_PTR(b, z), &__KB_PTR(b, y)[T], sizeof(void*) * T); \
 		y->n = T - 1;												\
-		memmove(__KB_PTR(b, x) + i + 2, __KB_PTR(b, x) + i + 1, sizeof(void*) * (unsigned int)(x->n - i)); \
+		memmove(&__KB_PTR(b, x)[i + 2], &__KB_PTR(b, x)[i + 1], sizeof(void*) * (unsigned int)(x->n - i)); \
 		__KB_PTR(b, x)[i + 1] = z;										\
-		memmove(__KB_KEY(key_t, x) + i + 1, __KB_KEY(key_t, x) + i, sizeof(key_t) * (unsigned int)(x->n - i)); \
+		memmove(&__KB_KEY(key_t, x)[i + 1], &__KB_KEY(key_t, x)[i], sizeof(key_t) * (unsigned int)(x->n - i)); \
 		__KB_KEY(key_t, x)[i] = __KB_KEY(key_t, y)[T - 1];			\
 		++x->n;															\
 	}																	\
@@ -175,7 +175,7 @@
 		if (x->is_internal == 0) {										\
 			i = __kb_getp_aux_##name(x, k, 0);							\
 			if (i != x->n - 1)											\
-				memmove(__KB_KEY(key_t, x) + i + 2, __KB_KEY(key_t, x) + i + 1, (unsigned int)(x->n - i - 1) * sizeof(key_t)); \
+				memmove(&__KB_KEY(key_t, x)[i + 2], &__KB_KEY(key_t, x)[i + 1], (unsigned int)(x->n - i - 1) * sizeof(key_t)); \
 			ret = &__KB_KEY(key_t, x)[i + 1];							\
 			*ret = *k;													\
 			++x->n;														\
@@ -228,7 +228,7 @@
 		if (x->is_internal == 0) {										\
 			if (s == 2) ++i;											\
 			kp = __KB_KEY(key_t, x)[i];									\
-			memmove(__KB_KEY(key_t, x) + i, __KB_KEY(key_t, x) + i + 1, (unsigned int)(x->n - i - 1) * sizeof(key_t)); \
+			memmove(&__KB_KEY(key_t, x)[i], &__KB_KEY(key_t, x)[i + 1], (unsigned int)(x->n - i - 1) * sizeof(key_t)); \
 			--x->n;														\
 			return kp;													\
 		}																\
@@ -246,11 +246,11 @@
 			} else if (yn == T - 1 && zn == T - 1) {				\
 				y = __KB_PTR(b, x)[i]; z = __KB_PTR(b, x)[i + 1];		\
 				__KB_KEY(key_t, y)[y->n++] = *k;						\
-				memmove(__KB_KEY(key_t, y) + y->n, __KB_KEY(key_t, z), (unsigned int)z->n * sizeof(key_t)); \
-				if (y->is_internal) memmove(__KB_PTR(b, y) + y->n, __KB_PTR(b, z), (unsigned int)(z->n + 1) * sizeof(void*)); \
+				memmove(&__KB_KEY(key_t, y)[y->n], __KB_KEY(key_t, z), (unsigned int)z->n * sizeof(key_t)); \
+				if (y->is_internal) memmove(&__KB_PTR(b, y)[y->n], __KB_PTR(b, z), (unsigned int)(z->n + 1) * sizeof(void*)); \
 				y->n += z->n;											\
-				memmove(__KB_KEY(key_t, x) + i, __KB_KEY(key_t, x) + i + 1, (unsigned int)(x->n - i - 1) * sizeof(key_t)); \
-				memmove(__KB_PTR(b, x) + i + 1, __KB_PTR(b, x) + i + 2, (unsigned int)(x->n - i - 1) * sizeof(void*)); \
+				memmove(&__KB_KEY(key_t, x)[i], &__KB_KEY(key_t, x)[i + 1], (unsigned int)(x->n - i - 1) * sizeof(key_t)); \
+				memmove(&__KB_PTR(b, x)[i + 1], &__KB_PTR(b, x)[i + 2], (unsigned int)(x->n - i - 1) * sizeof(void*)); \
 				--x->n;													\
 				xfree(z);												\
 				return __kb_delp_aux_##name(b, y, k, s);				\
@@ -259,8 +259,8 @@
 		++i;															\
 		if ((xp = __KB_PTR(b, x)[i])->n == T - 1) {					\
 			if (i > 0 && (y = __KB_PTR(b, x)[i - 1])->n >= T) {		\
-				memmove(__KB_KEY(key_t, xp) + 1, __KB_KEY(key_t, xp), (unsigned int)xp->n * sizeof(key_t)); \
-				if (xp->is_internal) memmove(__KB_PTR(b, xp) + 1, __KB_PTR(b, xp), (unsigned int)(xp->n + 1) * sizeof(void*)); \
+				memmove(&__KB_KEY(key_t, xp)[1], __KB_KEY(key_t, xp), (unsigned int)xp->n * sizeof(key_t)); \
+				if (xp->is_internal) memmove(&__KB_PTR(b, xp)[1], __KB_PTR(b, xp), (unsigned int)(xp->n + 1) * sizeof(void*)); \
 				__KB_KEY(key_t, xp)[0] = __KB_KEY(key_t, x)[i - 1];		\
 				__KB_KEY(key_t, x)[i - 1] = __KB_KEY(key_t, y)[y->n - 1]; \
 				if (xp->is_internal) __KB_PTR(b, xp)[0] = __KB_PTR(b, y)[y->n]; \
@@ -270,25 +270,25 @@
 				__KB_KEY(key_t, x)[i] = __KB_KEY(key_t, y)[0];			\
 				if (xp->is_internal) __KB_PTR(b, xp)[xp->n] = __KB_PTR(b, y)[0]; \
 				--y->n;													\
-				memmove(__KB_KEY(key_t, y), __KB_KEY(key_t, y) + 1, (unsigned int)y->n * sizeof(key_t)); \
-				if (y->is_internal) memmove(__KB_PTR(b, y), __KB_PTR(b, y) + 1, (unsigned int)(y->n + 1) * sizeof(void*)); \
+				memmove(__KB_KEY(key_t, y), &__KB_KEY(key_t, y)[1], (unsigned int)y->n * sizeof(key_t)); \
+				if (y->is_internal) memmove(__KB_PTR(b, y), &__KB_PTR(b, y)[1], (unsigned int)(y->n + 1) * sizeof(void*)); \
 			} else if (i > 0 && (y = __KB_PTR(b, x)[i - 1])->n == T - 1) { \
 				__KB_KEY(key_t, y)[y->n++] = __KB_KEY(key_t, x)[i - 1];	\
-				memmove(__KB_KEY(key_t, y) + y->n, __KB_KEY(key_t, xp), (unsigned int)xp->n * sizeof(key_t));	\
-				if (y->is_internal) memmove(__KB_PTR(b, y) + y->n, __KB_PTR(b, xp), (unsigned int)(xp->n + 1) * sizeof(void*)); \
+				memmove(&__KB_KEY(key_t, y)[y->n], __KB_KEY(key_t, xp), (unsigned int)xp->n * sizeof(key_t));	\
+				if (y->is_internal) memmove(&__KB_PTR(b, y)[y->n], __KB_PTR(b, xp), (unsigned int)(xp->n + 1) * sizeof(void*)); \
 				y->n += xp->n;											\
-				memmove(__KB_KEY(key_t, x) + i - 1, __KB_KEY(key_t, x) + i, (unsigned int)(x->n - i) * sizeof(key_t)); \
-				memmove(__KB_PTR(b, x) + i, __KB_PTR(b, x) + i + 1, (unsigned int)(x->n - i) * sizeof(void*)); \
+				memmove(&__KB_KEY(key_t, x)[i - 1], &__KB_KEY(key_t, x)[i], (unsigned int)(x->n - i) * sizeof(key_t)); \
+				memmove(&__KB_PTR(b, x)[i], &__KB_PTR(b, x)[i + 1], (unsigned int)(x->n - i) * sizeof(void*)); \
 				--x->n;													\
 				xfree(xp);												\
 				xp = y;													\
 			} else if (i < x->n && (y = __KB_PTR(b, x)[i + 1])->n == T - 1) { \
 				__KB_KEY(key_t, xp)[xp->n++] = __KB_KEY(key_t, x)[i];	\
-				memmove(__KB_KEY(key_t, xp) + xp->n, __KB_KEY(key_t, y), (unsigned int)y->n * sizeof(key_t));	\
-				if (xp->is_internal) memmove(__KB_PTR(b, xp) + xp->n, __KB_PTR(b, y), (unsigned int)(y->n + 1) * sizeof(void*)); \
+				memmove(&__KB_KEY(key_t, xp)[xp->n], __KB_KEY(key_t, y), (unsigned int)y->n * sizeof(key_t));	\
+				if (xp->is_internal) memmove(&__KB_PTR(b, xp)[xp->n], __KB_PTR(b, y), (unsigned int)(y->n + 1) * sizeof(void*)); \
 				xp->n += y->n;											\
-				memmove(__KB_KEY(key_t, x) + i, __KB_KEY(key_t, x) + i + 1, (unsigned int)(x->n - i - 1) * sizeof(key_t)); \
-				memmove(__KB_PTR(b, x) + i + 1, __KB_PTR(b, x) + i + 2, (unsigned int)(x->n - i - 1) * sizeof(void*)); \
+				memmove(&__KB_KEY(key_t, x)[i], &__KB_KEY(key_t, x)[i + 1], (unsigned int)(x->n - i - 1) * sizeof(key_t)); \
+				memmove(&__KB_PTR(b, x)[i + 1], &__KB_PTR(b, x)[i + 2], (unsigned int)(x->n - i - 1) * sizeof(void*)); \
 				--x->n;													\
 				xfree(y);												\
 			}															\
