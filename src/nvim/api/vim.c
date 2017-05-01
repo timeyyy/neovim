@@ -890,7 +890,7 @@ Integer nvim_init_tag_ns(String namespace, Error *err)
 {
   uint64_t ns_id = exttag_ns_create(namespace.data);
   if (!ns_id) {
-    api_set_error(err, Validation, _("Tag namespace already exists"));
+    api_set_error(err, kErrorTypeValidation, _("Tag namespace already exists"));
     return 0;
   }
   return (Integer)ns_id;
@@ -907,7 +907,7 @@ ArrayOf(Object) nvim_get_tag_ns_ids(Error *err)
   Array ns_array = ARRAY_DICT_INIT;
 
   if (!EXTTAG_NAMESPACES) {
-    api_set_error(err, Validation, _("No tag namespaces exist"));
+    api_set_error(err, kErrorTypeValidation, _("No tag namespaces exist"));
     return rv;
   }
 

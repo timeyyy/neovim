@@ -110,9 +110,9 @@ static int exttag_create(buf_T *buf,
 
   // Create the marks
   uint64_t extmark_ns = exttag_group->extmark_ns;
-  uint64_t lower = extmark_next_id_get(buf, extmark_ns);
+  uint64_t lower = extmark_free_id_get(buf, extmark_ns);
   extmark_create(buf, extmark_ns, lower, l_lnum, l_col, undo);
-  uint64_t upper = extmark_next_id_get(buf, extmark_ns);
+  uint64_t upper = extmark_free_id_get(buf, extmark_ns);
   extmark_create(buf, extmark_ns, upper, u_lnum, u_col, undo);
 
   // create or get a line

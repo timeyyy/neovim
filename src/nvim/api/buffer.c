@@ -862,12 +862,12 @@ ArrayOf(Object) nvim_buf_get_tags(Buffer buffer,
     return rv;
   }
   if (!exttag_ns_initialized((uint64_t)namespace)) {
-    api_set_error(err, Validation, _("Invalid mark namespace"));
+    api_set_error(err, kErrorTypeValidation, _("Invalid mark namespace"));
     return rv;
   }
 
   if(amount == 0) {
-    api_set_error(err, Validation, _("Amount must be greater than 0"));
+    api_set_error(err, kErrorTypeValidation, _("Amount must be greater than 0"));
     return rv;
   }
   linenr_T l_lnum = (linenr_T)lower.data.array.items[0].data.integer;
@@ -1003,7 +1003,7 @@ Integer nvim_buf_set_tag(Buffer buffer,
     return rv;
   }
   if (!exttag_ns_initialized((uint64_t)namespace)) {
-    api_set_error(err, Validation, _("Invalid mark namespace"));
+    api_set_error(err, kErrorTypeValidation, _("Invalid mark namespace"));
     return rv;
   }
 
@@ -1068,7 +1068,7 @@ Integer nvim_buf_unset_tag(Buffer buffer,
     return rv;
   }
   if (!exttag_ns_initialized((uint64_t)namespace)) {
-    api_set_error(err, Validation, _("Invalid tag namespace"));
+    api_set_error(err, kErrorTypeValidation, _("Invalid tag namespace"));
     return rv;
   }
   // TODO validate range of tag?
