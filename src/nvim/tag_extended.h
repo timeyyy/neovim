@@ -11,7 +11,7 @@
   kbitr_t(taglines) itr;\
   ExtTagLine t;\
   t.lnum = start;\
-  if(!kb_itr_get(taglines, &(exttag_group->extlines), &t, &itr)) { \
+  if (!kb_itr_get(taglines, &(exttag_group->extlines), &t, &itr)) { \
       kb_itr_next(taglines, &(exttag_group->extlines), &itr);\
   } \
   ExtTagLine *extline;\
@@ -29,7 +29,7 @@
   ExtTag mt;\
   mt.line = NULL;\
   FOR_ALL_EXTTAGLINES(exttag_group, start, end, { \
-    if(!kb_itr_get(tagitems, &extline->items, mt, &mitr)) { \
+    if (!kb_itr_get(tagitems, &extline->items, mt, &mitr)) { \
         kb_itr_next(tagitems, &extline->items, &mitr);\
     } \
     ExtTag exttag;\

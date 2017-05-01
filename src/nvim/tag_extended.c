@@ -1,9 +1,9 @@
 //
 // tag_extended.c --
 //
-//	This module implements the "tag" subcommand of the widget command for
-//	text widgets, plus most of the other high-level functions related to
-//	tags.
+//  This module implements the "tag" subcommand of the widget command for
+//  text widgets, plus most of the other high-level functions related to
+//  tags.
 //
 
 // TODO stack order tag_raise, tag_lower
@@ -184,8 +184,8 @@ ExtmarkArray exttag_get(buf_T *buf,
       /* } */
     /* }) */
 
-      ExtendedMark *_l_mark;
-      ExtendedMark *_u_mark;
+      // ExtendedMark *_l_mark;
+      // ExtendedMark *_u_mark;
 
       kbitr_t(tagitems) mitr;
       ExtTag mt;
@@ -194,17 +194,17 @@ ExtmarkArray exttag_get(buf_T *buf,
         kbitr_t(taglines) itr;
         ExtTagLine t;
         t.lnum = l_lnum;
-        if(!kb_itr_get(taglines, &(exttag_group->extlines), &t, &itr)) {
+        if (!kb_itr_get(taglines, &(exttag_group->extlines), &t, &itr)) {
             kb_itr_next(taglines, &(exttag_group->extlines), &itr);
         }
         ExtTagLine *extline;
-        for (; kb_itr_valid(&itr); kb_itr_next(taglines, &(exttag_group->extlines), &itr)) { 
+        for (; kb_itr_valid(&itr); kb_itr_next(taglines, &(exttag_group->extlines), &itr)) {
           extline = kb_itr_key(&itr);
-          if (extline->lnum > u_lnum && u_lnum != -1){ 
+          if (extline->lnum > u_lnum && u_lnum != -1) {
             break;
-          } 
+          }
 
-          if(!kb_itr_get(tagitems, &extline->items, mt, &mitr)) { 
+          if (!kb_itr_get(tagitems, &extline->items, mt, &mitr)) {
               kb_itr_next(tagitems, &extline->items, &mitr);
           }
           ExtTag exttag;

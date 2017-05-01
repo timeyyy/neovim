@@ -47,7 +47,7 @@ describe('Extmarks buffer api', function()
     end
   end)
 
-  it('adds, updates and deletes tags #tbad', function()
+  it('adds, updates and deletes tags #exttags', function()
     -- TODO test get_tags works when nothing has been set
     feed('A<cr>12345<esc>')
     rv = buffer('set_tag', buf, ns, tags[1], positions[1], positions[2])
@@ -55,8 +55,8 @@ describe('Extmarks buffer api', function()
     rv = buffer('get_tags', buf, ns, tags[1], positions[1], positions[2], 1, 0)
     eq({{positions[1], positions[2]}}, rv)
     -- Test adding a second tag to the tag group works
-    -- rv = buffer('set_tag', buf, ns, tags[1], positions[1], positions[2])
-    -- eq(1, rv)
+    rv = buffer('set_tag', buf, ns, tags[1], positions[1], positions[2])
+    eq(1, rv)
     -- rv = buffer('get_tags', buf, ns, tags[1], positions[2], positions[3], 1, 0)
     -- eq({positions[1], positions[2], positions[2], positions[3]}, rv)
     -- Test adding a second tag group
