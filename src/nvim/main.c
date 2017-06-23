@@ -73,6 +73,7 @@
 #include "nvim/api/private/helpers.h"
 #include "nvim/api/private/handle.h"
 #include "nvim/api/private/dispatch.h"
+#include "nvim/api/vim.h"
 
 /* Maximum number of commands from + or -c arguments. */
 #define MAX_ARG_CMDS 10
