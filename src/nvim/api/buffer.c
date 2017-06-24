@@ -403,7 +403,7 @@ void nvim_buf_set_lines(uint64_t channel_id,
   // the buffer, otherwise line numbers will be invalid.
   if (save_curbuf.br_buf == NULL) {
     mark_adjust((linenr_T)start, (linenr_T)(end - 1), MAXLNUM, extra, false,
-                kExtmarkNoReverse);
+                kExtmarkUndo);
   }
 
   changed_lines((linenr_T)start, 0, (linenr_T)end, (long)extra);
@@ -914,7 +914,7 @@ Integer nvim_buf_set_mark(Buffer buffer,
   }
 
   rv = (Integer)extmark_set(buf, (uint64_t)namespace, id,
-                            (linenr_T)row, (colnr_T)col, kExtmarkNoReverse);
+                            (linenr_T)row, (colnr_T)col, kExtmarkUndo);
   if (return_id) {
     return (Integer)id;
   } else {
@@ -947,7 +947,7 @@ Integer nvim_buf_unset_mark(Buffer buffer,
   }
 
   rv = (Integer)extmark_unset(buf, (uint64_t)namespace, (uint64_t)id,
-                              kExtmarkNoReverse);
+                              kExtmarkUndo);
   return rv;
 }
 
