@@ -330,7 +330,6 @@ void extmark_free_all(buf_T *buf)
     kb_del_itr(extlines, &buf->b_extlines, &itr);
     xfree(extline);
   })
-  // TODO(timeyyy): why do we need the parans on the 2nd arg?
   // k?_init called to set pointers to NULL
   kb_destroy(extlines, (&buf->b_extlines));
   kb_init(&buf->b_extlines);
