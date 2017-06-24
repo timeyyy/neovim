@@ -757,7 +757,7 @@ open_line (
   // be marks there.
   if (curwin->w_cursor.lnum + 1 < curbuf->b_ml.ml_line_count) {
     mark_adjust(curwin->w_cursor.lnum + 1, (linenr_T)MAXLNUM, 1L, 0L, false,
-                kExtmarkNoReverse);
+                kExtmarkUndo);
   }
   did_append = true;
   } else {
@@ -852,7 +852,7 @@ open_line (
         // Always move extmarks - Here we move the only lnum where the cursor is
         // The previous mark_adjust takes care of the lines after
         extmark_col_adjust(curbuf, lnum, mincol, 1L, (long)-less_cols,
-                           kExtmarkNoReverse);
+                           kExtmarkUndo);
 
       } else {
         changed_bytes(curwin->w_cursor.lnum, curwin->w_cursor.col);
@@ -1677,7 +1677,7 @@ int del_bytes(colnr_T count, bool fixpos_arg, bool use_delcombine)
   changed_bytes(lnum, curwin->w_cursor.col);
 
   // Move extmarks with char del or tab with noexpandtab
-  ExtmarkReverse reverse = kExtmarkNoReverse;
+  ExtmarkOp reverse = kExtmarkUndo;
   if ((col + count) == oldlen) {
     reverse = kExtmarkNoUndo;
   }
@@ -1884,7 +1884,7 @@ void appended_lines(linenr_T lnum, long count)
  */
 void appended_lines_mark(linenr_T lnum, long count)
 {
-  mark_adjust(lnum + 1, (linenr_T)MAXLNUM, count, 0L, false, kExtmarkNoReverse);
+  mark_adjust(lnum + 1, (linenr_T)MAXLNUM, count, 0L, false, kExtmarkUndo);
   changed_lines(lnum + 1, 0, lnum + 1, count);
 }
 
@@ -1906,7 +1906,7 @@ void deleted_lines(linenr_T lnum, long count)
 void deleted_lines_mark(linenr_T lnum, long count)
 {
   mark_adjust(lnum, (linenr_T)(lnum + count - 1), (long)MAXLNUM, -count, false,
-              kExtmarkNoReverse);
+              kExtmarkUndo);
   changed_lines(lnum, 0, lnum + count, -count);
 }
 
