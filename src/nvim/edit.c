@@ -1777,6 +1777,10 @@ change_indent (
 
     xfree(new_line);
   }
+
+  // Move extmarks
+  extmark_col_adjust(curbuf, curwin->w_cursor.lnum, 0, 1L, (long)amount,
+                     kExtmarkUndo);
 }
 
 /*
