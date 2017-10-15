@@ -1173,3 +1173,13 @@ ArrayOf(Dictionary) keymap_array(String mode, buf_T *buf)
 
   return mappings;
 }
+
+
+// Is the Namespace in use?
+bool ns_initialized(uint64_t ns)
+{
+  if (ns < 1) {
+    return false;
+  }
+  return ns < next_namespace_id;
+}
