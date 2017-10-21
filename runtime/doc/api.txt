@@ -553,22 +553,6 @@ nvim__id_float({flt})                                       *nvim__id_float()*
                 Return:~
                     its argument.
 
-                                                        *nvim_init_mark_ns()*
-nvim_init_mark_ns({namespace})
-                Create a new namepsace for holding extended marks. The id
-                of the namespace is returned, this namespace id is required
-                for using the rest of the extended marks api.
-
-                Parameters:~
-                    {namespace} String name to be assigned to the namespace
-
-
-                                                     *nvim_mark_get_ns_ids()*
-nvim_mark_get_ns_ids()
-                Returns a list of extended mark namespaces.
-                Pairs of ids and string names are returned.
-                An empty list will be returned if no namespaces are set.
-
 
 ==============================================================================
 Buffer Functions                                                  *api-buffer*
@@ -792,7 +776,7 @@ nvim_buf_lookup_mark({buffer}, {namespace}, {id})
                 Parameters:~
                     {buffer}      Buffer handle
                     {namespace}   Extended mark namespace id returned from
-                                  |nvim_init_mark_ns()|
+                                  |nvim_create_namespace()|
                     {id}          Sometart of range of lines to clear
 
                                                         *nvim_buf_get_marks()*
@@ -808,7 +792,7 @@ nvim_buf_get_marks({buffer}, {namespace}, {lower}, {upper}, {amount}, {reverse})
                 Parameters:~
                     {buffer}      Buffer handle
                     {namespace}   Extended mark namespace id returned from
-                                  |nvim_init_mark_ns()|
+                                  |nvim_create_namespace()|
                     {lower}       Either: extended mark id, (row, col) or -1
                                   for start of buffer.
                     {upper}       Either: extended mark id, (row, col) or -1
@@ -829,7 +813,7 @@ nvim_buf_set_mark({buffer}, {namespace}, {mark_id}, {row}, {col})
                 Parameters:~
                     {buffer}      Buffer handle
                     {namespace}   Extended mark namespace id returned from
-                                  |nvim_init_mark_ns()|
+                                  |nvim_create_namespace()|
                     {mark_id}     An integer id or an empty string
                     {row}         The row to set the extended mark to.
                     {col}         The column to set the extended mark to.
@@ -845,7 +829,7 @@ nvim_buf_unset_mark({buffer}, {namespace}, {id})
                 Parameters:~
                     {buffer}      Buffer handle
                     {namespace}   Extended mark namespace id returned from
-                                  |nvim_init_mark_ns()|
+                                  |nvim_create_namespace()|
                     {id}          The extended mark's id.
 
 
