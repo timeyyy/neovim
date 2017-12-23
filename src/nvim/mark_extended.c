@@ -163,12 +163,12 @@ ExtmarkArray extmark_get(buf_T *buf,
   return array;
 }
 
-static bool extmark_create(buf_T *buf,
-                           uint64_t ns,
-                           uint64_t id,
-                           linenr_T lnum,
-                           colnr_T col,
-                           ExtmarkOp op)
+bool extmark_create(buf_T *buf,
+                    uint64_t ns,
+                    uint64_t id,
+                    linenr_T lnum,
+                    colnr_T col,
+                    ExtmarkOp op)
 {
   if (!buf->b_extmark_ns) {
     buf->b_extmark_ns = pmap_new(uint64_t)();
@@ -1087,4 +1087,29 @@ int mark_cmp(ExtendedMark a, ExtendedMark b)
     return cmp;
   }
   return kb_generic_cmp(a.mark_id, b.mark_id);
+}
+
+// Return the next avaliable id in a namespace
+uint64_t extmark_next_id_get(buf_T *buf, uint64_t ns)
+{
+  // Namespaces start at 1
+  uint64_t last_seen = 1;
+
+  if (!buf->b_extmark_ns) {
+    return last_seen;
+  }
+  ExtmarkNs *ns_obj = pmap_get(uint64_t)(buf->b_extmark_ns, ns);
+  if (!ns_obj) {
+    return last_seen;
+  }
+
+  // Just adds +1 to the largest id found
+  uint64_t mark_id;
+  ExtendedMark *extmark;
+  map_foreach(ns_obj->map, mark_id, extmark, {
+    if (mark_id > last_seen) {
+      last_seen = mark_id;
+    }
+  })
+  return last_seen + 1;
 }

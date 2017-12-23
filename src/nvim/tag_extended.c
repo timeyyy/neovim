@@ -23,38 +23,6 @@
 # include "tag_extended.c.generated.h"
 #endif
 
-
-static uint64_t namespace_counter = 0;
-
-
-// Required before calling any other functions
-uint64_t exttag_ns_create(char *ns)
-{
-  if (!namespace_counter) {
-    EXTTAG_NAMESPACES = map_new(uint64_t, cstr_t)();
-  }
-  // Ensure the namespace is unique
-  cstr_t value;
-  map_foreach_value(EXTTAG_NAMESPACES, value, {
-    if (STRCMP(ns, value) == 0) {
-      return FAIL;
-    }
-  });
-  namespace_counter++;
-  uint64_t id = namespace_counter;
-  map_put(uint64_t, cstr_t)(EXTTAG_NAMESPACES, id, xstrdup(ns));
-  return namespace_counter;
-}
-
-
-bool exttag_ns_initialized(uint64_t ns) {
-  if (!EXTTAG_NAMESPACES) {
-    return 0;
-  }
-  return map_has(uint64_t, cstr_t)(EXTTAG_NAMESPACES, ns);
-}
-
-
 // Create or update an exttag
 //
 // Returns 1 on success
@@ -67,7 +35,7 @@ int exttag_set(buf_T *buf,
                colnr_T l_col,
                linenr_T u_lnum,
                colnr_T u_col,
-               ExtmarkReverse undo)
+               ExtmarkOp undo)
 {
   HITS++;
   int rv = exttag_create(buf, ns, id, l_lnum, l_col, u_lnum, u_col, undo);
@@ -83,7 +51,7 @@ static int exttag_create(buf_T *buf,
                           colnr_T l_col,
                           linenr_T u_lnum,
                           colnr_T u_col,
-                          ExtmarkReverse undo)
+                          ExtmarkOp undo)
 {
   if (!buf->b_exttag_ns) {
     buf->b_exttag_ns = pmap_new(uint64_t)();
@@ -298,7 +266,8 @@ static uint64_t init_extmark_ns(uint64_t tag_ns, uint64_t id)
 
   // get the integer representation of the namespace
   /* return extmark_ns_create(ns_str); */
-  return extmark_ns_create(exttag_prefix);
+  return 1;
+  // return extmark_ns_create(exttag_prefix);
 }
 
 void exttag_free_all(buf_T *buf)

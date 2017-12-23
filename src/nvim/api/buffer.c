@@ -869,7 +869,7 @@ ArrayOf(Object) nvim_buf_get_marks(Buffer buffer,
 /// If there are no tags returns an empty list
 ///
 /// @param buffer The buffer handle
-/// @param namespace an id returned previously from exttag_ns_create
+/// @param namespace an id returned previously from nvim_create_namespace
 /// @param lower any valid tag identifier (row, col) or tag_id or -1
 /// @param upper any valid tag identifier (row, col) or tag_id or -1
 /// @param amount Maximum number of extmarks to return
@@ -892,13 +892,13 @@ ArrayOf(Object) nvim_buf_get_tags(Buffer buffer,
   if (!buf) {
     return rv;
   }
-  if (!exttag_ns_initialized((uint64_t)namespace)) {
-    api_set_error(err, Validation, _("Invalid mark namespace"));
+  if (!ns_initialized((uint64_t)namespace)) {
+    api_set_error(err, kErrorTypeValidation, _("Invalid mark namespace"));
     return rv;
   }
 
   if(amount == 0) {
-    api_set_error(err, Validation, _("Amount must be greater than 0"));
+    api_set_error(err, kErrorTypeValidation, _("Amount must be greater than 0"));
     return rv;
   }
   linenr_T l_lnum = (linenr_T)lower.data.array.items[0].data.integer;
@@ -1033,8 +1033,8 @@ Integer nvim_buf_set_tag(Buffer buffer,
   if (!buf) {
     return rv;
   }
-  if (!exttag_ns_initialized((uint64_t)namespace)) {
-    api_set_error(err, Validation, _("Invalid mark namespace"));
+  if (!ns_initialized((uint64_t)namespace)) {
+    api_set_error(err, kErrorTypeValidation, _("Invalid mark namespace"));
     return rv;
   }
 
@@ -1045,7 +1045,7 @@ Integer nvim_buf_set_tag(Buffer buffer,
   colnr_T u_col = (colnr_T)upper.data.array.items[1].data.integer;
 
   rv = (Integer)exttag_set(buf, (uint64_t)namespace, (uint64_t)id,
-                           l_lnum, l_col, u_lnum, u_col, kExtmarkNoReverse);
+                           l_lnum, l_col, u_lnum, u_col, kExtmarkUndo);
   return rv;
 }
 
@@ -1098,8 +1098,8 @@ Integer nvim_buf_unset_tag(Buffer buffer,
   if (!buf) {
     return rv;
   }
-  if (!exttag_ns_initialized((uint64_t)namespace)) {
-    api_set_error(err, Validation, _("Invalid tag namespace"));
+  if (!ns_initialized((uint64_t)namespace)) {
+    api_set_error(err, kErrorTypeValidation, _("Invalid tag namespace"));
     return rv;
   }
   // TODO validate range of tag?

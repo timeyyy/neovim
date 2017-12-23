@@ -124,9 +124,6 @@ typedef struct ExtTagGroup
 } ExtTagGroup;
 
 
-_NS *EXTTAG_NAMESPACES;
-
-
 typedef struct ExtTagNs {
   IntMap *tag_groups;
 } ExtTagNs;

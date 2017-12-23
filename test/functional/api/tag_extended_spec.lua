@@ -37,11 +37,11 @@ describe('Extmarks buffer api', function()
     ns = 0
     -- 'add and query namespaces', these are required for tags to be created
     if ns == 0 then
-      ns = request('nvim_init_tag_ns', ns_string)
+      ns = request('nvim_create_namespace', ns_string)
       eq(1, ns)
-      rv = request('nvim_init_tag_ns', ns_string2)
+      rv = request('nvim_create_namespace', ns_string2)
       eq(2, rv)
-      rv = request('nvim_get_tag_ns_ids')
+      rv = request('nvim_get_namespaces')
       eq({1, ns_string}, rv[1])
       eq({2, ns_string2}, rv[2])
     end
