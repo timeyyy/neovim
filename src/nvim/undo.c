@@ -3000,3 +3000,25 @@ void u_eval_tree(u_header_T *first_uhp, list_T *list)
     uhp = uhp->uh_prev.ptr;
   }
 }
+
+// Given the buffer, Return the undo header. If none is set, set one first.
+u_header_T *get_undo_header(buf_T *buf)
+{
+  u_header_T *uhp = NULL;
+  if (buf->b_u_curhead != NULL) {
+    uhp = buf->b_u_curhead;
+  } else if (buf->b_u_newhead) {
+    uhp = buf->b_u_newhead;
+  }
+  // Create the first undo header for the buffer
+  if (!uhp) {
+    // TODO(timeyyy): there would be a better way to do this!
+    u_save_cursor();
+    uhp = buf->b_u_curhead;
+    if (!uhp) {
+      uhp = buf->b_u_newhead;
+      assert(uhp);
+    }
+  }
+  return uhp;
+}
