@@ -509,7 +509,8 @@ static void u_extmark_adjust(buf_T * buf,
                              linenr_T line1,
                              linenr_T line2,
                              long amount,
-                             long amount_after)
+                             long amount_after,
+                             DeletedLines deleted_lines)
 {
   u_header_T  *uhp = get_undo_header(buf);
 
@@ -518,6 +519,7 @@ static void u_extmark_adjust(buf_T * buf,
   adjust.line2 = line2;
   adjust.amount = amount;
   adjust.amount_after = amount_after;
+  adjust.deleted_lines = deleted_lines;
 
   ExtmarkUndoObject undo = { .type = kLineAdjust,
                              .data.adjust = adjust };
@@ -655,6 +657,14 @@ void extmark_apply_undo(ExtmarkUndoObject undo_info, bool undo)
       line2 = undo_info.data.adjust.line2;
       amount = undo_info.data.adjust.amount;
       amount_after = undo_info.data.adjust.amount_after;
+
+      // Recreate any line that were deleted.
+      size_t n = kv_size(undo_info.data.adjust.deleted_lines);
+      linenr_T deleted_line;
+      for (size_t i = 0; i < n; i++) {
+        deleted_line = kv_A(undo_info.data.adjust.deleted_lines, i);
+        extline_ref(&curbuf->b_extlines, deleted_line);
+      }
     }
     extmark_adjust(curbuf,
                    line1, line2, amount, amount_after, kExtmarkNoUndo, false);
@@ -926,7 +936,6 @@ void extmark_col_adjust(buf_T *buf, linenr_T lnum,
 }
 
 // Adjust marks by doing a delete on a line
-// TODO change mincol to be for the mark toe be copied, not moved
 // mincol: First column that needs to be moved (start of delete range)
 // endcol: Last column which needs to be copied (end of delete range + 1)
 void extmark_col_adjust_delete(buf_T *buf, linenr_T lnum,
@@ -994,6 +1003,7 @@ void extmark_adjust(buf_T * buf,
   }
 
   bool marks_exist = false;
+  DeletedLines deleted_lines = KV_INITIAL_VALUE;
   linenr_T *lp;
   FOR_ALL_EXTMARKLINES(buf, MINLNUM, MAXLNUM, {
     marks_exist = true;
@@ -1011,10 +1021,10 @@ void extmark_adjust(buf_T * buf,
           extmark_unset(buf, extmark->ns_id, extmark->mark_id,
                         kExtmarkUndo);
         })
-        // TODO(timeyyy): make freeing the line a undoable action
-        // Maybe a pool of lines...
-        // kb_del_itr(extlines, &buf->b_extlines, &itr);
-        // xfree(extline);
+        kb_destroy(markitems, (&extline->items));
+        kb_del_itr(extlines, &buf->b_extlines, &itr);
+        xfree(extline);
+        kv_push(deleted_lines, *lp);
       } else {
         *lp += amount;
       }
@@ -1024,7 +1034,7 @@ void extmark_adjust(buf_T * buf,
   })
 
   if (undo == kExtmarkUndo && marks_exist) {
-    u_extmark_adjust(buf, line1, line2, amount, amount_after);
+    u_extmark_adjust(buf, line1, line2, amount, amount_after, deleted_lines);
   }
 }
 

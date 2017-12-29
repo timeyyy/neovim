@@ -145,6 +145,7 @@ typedef kvec_t(ExtendedMark *) ExtmarkArray;
 
 
 // Undo/redo extmarks
+typedef kvec_t(linenr_T) DeletedLines;
 
 typedef enum {
   kExtmarkNOOP,      // Extmarks shouldn't be moved
@@ -158,6 +159,7 @@ typedef struct {
   linenr_T line2;
   long amount;
   long amount_after;
+  DeletedLines deleted_lines;
 } Adjust;
 
 typedef struct {

@@ -881,7 +881,7 @@ describe('Extmarks buffer api', function()
     eq(2, table.getn(rv))
   end)
 
-  it('undo and redo of marks deleted during edits #extmarks', function()
+  it('undo and redo of marks deleted during edits #extmarks2', function()
     -- test extmark_adjust
     feed('A<cr>12345<esc>')
     buffer('set_mark', buf, ns, marks[1], 2, 3)
