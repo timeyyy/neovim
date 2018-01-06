@@ -788,10 +788,6 @@ ArrayOf(Integer, 2) nvim_buf_get_mark(Buffer buffer, String name, Error *err)
 }
 
 /// Returns extended mark info for a given mark identifier
-/// If no mark is found, returns an empty list.
-///
-/// If an invalid namespace or buffer is given, an error will be
-/// raised and 0 returned.
 ///
 /// @param buffer The buffer handle
 /// @param namespace a identifier returned previously with nvim_create_namespace
@@ -830,10 +826,6 @@ ArrayOf(Object) nvim_buf_lookup_mark(Buffer buffer,
 }
 
 /// Returns extended mark info in a range (inclusive)
-/// If no marks are found, returns an empty list.
-///
-/// If an invalid namespace or buffer is given, an error will be
-/// raised and 0 returned.
 ///
 /// @param buffer The buffer handle
 /// @param namespace An id returned previously from nvim_create_namespace
@@ -918,8 +910,7 @@ ArrayOf(Object) nvim_buf_get_marks(Buffer buffer,
 
 /// Create or update an extended mark at a position
 ///
-/// If an invalid namespace or buffer is given, an error will be
-/// raised and 0 returned.
+/// If an invalid namespace is given, an error will be raised.
 ///
 /// @param buffer The buffer handle
 /// @param namespace a identifier returned previously with nvim_create_namespace
@@ -973,9 +964,6 @@ Integer nvim_buf_set_mark(Buffer buffer,
 }
 
 /// Remove an extended mark
-///
-/// If an invalid namespace or buffer is given, an error will be
-/// raised and 0 returned.
 ///
 /// @param buffer The buffer handle
 /// @param namespace a identifier returned previously with nvim_create_namespace
