@@ -887,7 +887,7 @@ Integer nvim_create_namespace(String name)
   FUNC_API_SINCE(4)
 {
   uint64_t id = current_namespace_id++;
-  kv_push(namespaces,copy_string(name));
+  kv_push(namespaces, copy_string(name));
   return (Integer)id;
 }
 
@@ -896,7 +896,7 @@ Array nvim_get_namespaces(void)
 {
   Array retval = ARRAY_DICT_INIT;
   for (size_t i = 0; i < kv_size(namespaces); i++) {
-    ADD(retval, STRING_OBJ(copy_string(kv_A(namespaces,i))));
+    ADD(retval, STRING_OBJ(copy_string(kv_A(namespaces, i))));
   }
   return retval;
 }
