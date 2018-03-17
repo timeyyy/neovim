@@ -1608,7 +1608,7 @@ int op_delete(oparg_T *oap)
       curwin->w_cursor.col = 0;
       (void)del_bytes((colnr_T)n, !virtual_op,
                       oap->op_type == OP_DELETE && !oap->is_VIsual);
-      mark_col_adjust(curwin->w_cursor.lnum,
+      extmark_col_adjust(curbuf, curwin->w_cursor.lnum,
                       (colnr_T)0, 0L, (long)-n, kExtmarkUndo);
       curwin->w_cursor = curpos;  // restore curwin->w_cursor
       (void)do_join(2, false, false, false, false);

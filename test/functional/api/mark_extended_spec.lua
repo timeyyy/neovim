@@ -1064,6 +1064,26 @@ describe('Extmarks buffer api', function()
     check_undo_redo(buf, ns, marks[2], 1, 4, 1, 6)
   end)
 
+  it('substitions over multiple lines #testing', function()
+    feed('A<cr>67890<cr>xxxxx<esc>')
+    buffer('set_mark', buf, ns, marks[1], 2, 3)
+    feed([[:/^1/,/^6/s/\n\(.\)/ \1/<cr>]])
+    rv = buffer('lookup_mark', buf, ns, marks[1])
+    eq({marks[1], 1, 9}, rv)
+    screen:expect([[
+      ^12345 67890    |
+      xxxxx          |
+      ~              |
+      ~              |
+      ~              |
+      ~              |
+      ~              |
+      ~              |
+      ~              |
+                     |
+    ]])
+  end)
+
   it('using <c-a> when increase in order of magnitude #extmarks', function()
     -- do_addsub in ops.c
     feed('ddi9 abc<esc>H')
