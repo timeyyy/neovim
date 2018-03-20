@@ -3152,6 +3152,62 @@ static char_u *sub_parse_flags(char_u *cmd, subflags_T *subflags,
   return cmd;
 }
 
+
+static void extmark_move_regmatch_single(lpos_T startpos,
+                                         lpos_T endpos,
+                                         linenr_T lnum,
+                                         int sublen)
+{
+  colnr_T mincol;
+  colnr_T endcol;
+  colnr_T col_amount;
+
+  mincol = startpos.col + 1;
+  endcol = endpos.col + 1;
+  extmark_col_adjust_delete(curbuf, lnum, mincol + 1, endcol, kExtmarkUndo);
+  // Insert, sublen seems to be the value we need but + 1...
+  col_amount = sublen - 1;
+  extmark_col_adjust(curbuf, lnum, mincol, 0, col_amount, kExtmarkUndo);
+}
+
+// lnum is starting lnum
+static void extmark_move_regmatch_multi(regmmatch_T regmatch,
+                                        int start_index,
+                                        int sublen)
+{
+  int i;
+  colnr_T mincol;
+  colnr_T col_amount;
+  linenr_T current_lnum = regmatch.startpos[start_index].lnum + 1;
+  linenr_T end_match_lnum = regmatch.endpos[start_index].lnum + 1;
+
+  // Move all but the last line
+  for (i = start_index; current_lnum != end_match_lnum; i++) {
+  // while (current_lnum != end_match_lnum) {
+    // Delete until the EOL because the operation wraps
+    // TODO but what about the start position of the next line? (mincol? is it
+    // correct)?
+    mincol = regmatch.startpos[i].col + 1;
+
+    extmark_col_adjust_delete(curbuf, current_lnum, mincol + 1, MAXCOL,
+                              kExtmarkUndo);
+    // Insert, sublen seems to be the value we need but + 1...
+    // FIXME - col_amount
+    // col_amount = sublen - 1;
+    // extmark_col_adjust(curbuf, current_lnum, mincol, 0, col_amount,
+                       // kExtmarkUndo);
+
+    current_lnum++;
+  }
+  // Move the last line
+  // Is the i still in scope?
+  extmark_move_regmatch_single(regmatch.startpos[i],
+                               regmatch.endpos[i],
+                               current_lnum,
+                               sublen);
+}
+
+
 /// Perform a substitution from line eap->line1 to line eap->line2 using the
 /// command pointed to by eap->arg which should be of the form:
 ///
@@ -3823,16 +3879,15 @@ static buf_T *do_sub(exarg_T *eap, proftime_T timeout)
           if (!preview) {
             // Adjust extmarks, by delete and then insert
             // /*
-            i = 0;
-            long i2=0;
-            int match_i = 0;
-            colnr_T mincol;
-            colnr_T endcol;
-            colnr_T col_amount;
+            // i = 0;
+            // long i2=0;
+            // colnr_T mincol;
+            // colnr_T endcol;
+            // colnr_T col_amount;
             linenr_T start_match_line = regmatch.startpos[i].lnum + 1;
             linenr_T end_match_line = regmatch.endpos[i].lnum + 1;
             linenr_T current_lnum;
-            linenr_T current_lnum2;
+            // linenr_T current_lnum2;
 
             // Continue while we have a match
             for (i = 0; start_match_line != 0; i++) {
@@ -3841,47 +3896,66 @@ static buf_T *do_sub(exarg_T *eap, proftime_T timeout)
 
               // Single line match
               if (current_lnum == end_match_line) {
-                mincol = regmatch.startpos[i].col + 1;
-                endcol = regmatch.endpos[i].col + 1;
-                extmark_col_adjust_delete(curbuf, current_lnum, mincol + 1, endcol,
-                                          kExtmarkUndo);
-                // Insert, sublen seems to be the value we need but + 1...
-                col_amount = sublen - 1;
-                extmark_col_adjust(curbuf, current_lnum, mincol, 0, col_amount,
-                                   kExtmarkUndo);
-                // This is a match over more than one line
+                extmark_move_regmatch_single(regmatch.startpos[i],
+                                             regmatch.endpos[i],
+                                             current_lnum,
+                                             sublen);
+                // multiline match
               } else {
-                current_lnum2 = current_lnum;
-
-                long index = i2 + i;
-                for (i2 = 0; current_lnum2 != end_match_line; i2++) {
-
-                  index = i2 +i;
-
-                  current_lnum2 = current_lnum + (linenr_T)i2;
-
-                  // Delete until the EOL
-                  mincol = regmatch.startpos[index].col + 1;
-                  extmark_col_adjust_delete(curbuf, current_lnum2, mincol + 1, MAXCOL,
-                                            kExtmarkUndo);
-                  // Insert, sublen seems to be the value we need but + 1...
-                  col_amount = sublen - 1;
-                  extmark_col_adjust(curbuf, current_lnum2, mincol, 0, col_amount,
-                                     kExtmarkUndo);
-                }
-                // This is the same as single line match
-                mincol = regmatch.startpos[index].col + 1;
-                endcol = regmatch.endpos[index].col + 1;
-                extmark_col_adjust_delete(curbuf, current_lnum2, mincol + 1, endcol,
-                                          kExtmarkUndo);
-                // Insert, sublen seems to be the value we need but + 1...
-                col_amount = sublen - 1;
-                extmark_col_adjust(curbuf, current_lnum2, mincol, 0, col_amount,
-                                   kExtmarkUndo);
+                extmark_move_regmatch_multi(regmatch, i, sublen);
               }
               start_match_line = regmatch.startpos[i].lnum + 1;
               end_match_line = regmatch.endpos[i].lnum + 1;
             }
+
+
+            // for (i = 0; start_match_line != 0; i++) {
+
+              // current_lnum = lnum + (linenr_T)i;
+
+              // Single line match
+              // if (current_lnum == end_match_line) {
+                // mincol = regmatch.startpos[i].col + 1;
+                // endcol = regmatch.endpos[i].col + 1;
+                // extmark_col_adjust_delete(curbuf, current_lnum, mincol + 1, endcol,
+                                          // kExtmarkUndo);
+                // Insert, sublen seems to be the value we need but + 1...
+                // col_amount = sublen - 1;
+                // extmark_col_adjust(curbuf, current_lnum, mincol, 0, col_amount,
+                                   // kExtmarkUndo);
+                // This is a match over more than one line
+              // } else {
+                // current_lnum2 = current_lnum;
+
+                // long index = i2 + i;
+                // for (i2 = 0; current_lnum2 != end_match_line; i2++) {
+
+                  // index = i2 +i;
+
+                  // current_lnum2 = current_lnum + (linenr_T)i2;
+
+                  // Delete until the EOL
+                  // mincol = regmatch.startpos[index].col + 1;
+                  // extmark_col_adjust_delete(curbuf, current_lnum2, mincol + 1, MAXCOL,
+                                            // kExtmarkUndo);
+                  // Insert, sublen seems to be the value we need but + 1...
+                  // col_amount = sublen - 1;
+                  // extmark_col_adjust(curbuf, current_lnum2, mincol, 0, col_amount,
+                                     // kExtmarkUndo);
+                // }
+                // This is the same as single line match
+                // mincol = regmatch.startpos[index].col + 1;
+                // endcol = regmatch.endpos[index].col + 1;
+                // extmark_col_adjust_delete(curbuf, current_lnum2, mincol + 1, endcol,
+                                          // kExtmarkUndo);
+                // Insert, sublen seems to be the value we need but + 1...
+                // col_amount = sublen - 1;
+                // extmark_col_adjust(curbuf, current_lnum2, mincol, 0, col_amount,
+                                   // kExtmarkUndo);
+              // }
+              // start_match_line = regmatch.startpos[i].lnum + 1;
+              // end_match_line = regmatch.endpos[i].lnum + 1;
+            // }
             // */
 
 //            colnr_T  mincol = regmatch.startpos[0].col + 1;
