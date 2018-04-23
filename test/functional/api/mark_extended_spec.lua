@@ -1067,7 +1067,15 @@ describe('Extmarks buffer api', function()
   it('substitions over multiple lines #testing', function()
     feed('A<cr>67890<cr>xxxxx<esc>')
     buffer('set_mark', buf, ns, marks[1], 2, 3)
-    feed([[:/^1/,/^6/s/\n\(.\)/ \1/<cr>]])
+    -- . = any char except new line
+    -- ^1 = line starts with 1
+    -- ^6 = line starts with 6
+    -- [range]/substitue/
+    -- <range> from ^1 to ^6 </range>
+    -- <substitue> </substitue>
+    -- \n\(.\) = find all new line chars, add a back ref on the next char
+    -- insert a space and the matched char that was after the newline ` \1`
+    feed([[:/^1/,/^6/s:\n\(.\): \1:<cr>]])
     rv = buffer('lookup_mark', buf, ns, marks[1])
     eq({marks[1], 1, 9}, rv)
     screen:expect([[
@@ -1082,6 +1090,14 @@ describe('Extmarks buffer api', function()
       ~              |
                      |
     ]])
+    -- startpos[0] = 0, 5
+    -- endpos[0] = 1, 1
+    --
+    -- startpos[1] = 1, 0
+    -- endpos[1] = 1, 1
+    --
+    -- startpos[1] = -1, -1
+    -- endpos[1] = -1, -1
   end)
 
   it('using <c-a> when increase in order of magnitude #extmarks', function()

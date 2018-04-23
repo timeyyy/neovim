@@ -3200,7 +3200,8 @@ static void extmark_move_regmatch_multi(regmmatch_T regmatch,
     current_lnum++;
   }
   // Move the last line
-  // Is the i still in scope?
+  i++;
+  // TODO this is 100% wrong
   extmark_move_regmatch_single(regmatch.startpos[i],
                                regmatch.endpos[i],
                                current_lnum,
@@ -3879,7 +3880,7 @@ static buf_T *do_sub(exarg_T *eap, proftime_T timeout)
           if (!preview) {
             // Adjust extmarks, by delete and then insert
             // /*
-            // i = 0;
+             i = 0;
             // long i2=0;
             // colnr_T mincol;
             // colnr_T endcol;
@@ -3890,8 +3891,8 @@ static buf_T *do_sub(exarg_T *eap, proftime_T timeout)
             // linenr_T current_lnum2;
 
             // Continue while we have a match
-            for (i = 0; start_match_line != 0; i++) {
-
+            while(start_match_line != 0) {
+              break;
               current_lnum = lnum + (linenr_T)i;
 
               // Single line match
@@ -3902,10 +3903,11 @@ static buf_T *do_sub(exarg_T *eap, proftime_T timeout)
                                              sublen);
                 // multiline match
               } else {
-                extmark_move_regmatch_multi(regmatch, i, sublen);
+                extmark_move_regmatch_multi(regmatch, (int)i, sublen);
               }
               start_match_line = regmatch.startpos[i].lnum + 1;
               end_match_line = regmatch.endpos[i].lnum + 1;
+              i++;
             }
 
 
