@@ -635,7 +635,7 @@ void extmark_apply_undo(ExtmarkUndoObject undo_info, bool undo)
     if (undo) {
       mincol = undo_info.data.col_adjust_delete.mincol;
       col_amount = (undo_info.data.col_adjust_delete.endcol
-                    - undo_info.data.col_adjust_delete.mincol) + 1;
+                    - undo_info.data.col_adjust_delete.mincol);
       extmark_col_adjust(curbuf,
                          undo_info.data.col_adjust_delete.lnum,
                          mincol,
@@ -857,7 +857,7 @@ long update_variably(colnr_T mincol, colnr_T current, long endcol)
   // Mark outside of range
   } else {
     // -1 because a delete of width 0 should still move marks
-    col_amount = -(endcol - start_effected_range);
+    col_amount = -(endcol - mincol);
   }
   return col_amount;
 }
@@ -1036,7 +1036,7 @@ void extmark_col_adjust_delete(buf_T *buf, linenr_T lnum,
                                colnr_T mincol, colnr_T endcol,
                                ExtmarkOp undo)
 {
-  colnr_T start_effected_range = mincol - 1;
+  colnr_T start_effected_range = mincol;
   assert(start_effected_range <= endcol);
 
   bool marks_moved;
@@ -1052,13 +1052,10 @@ void extmark_col_adjust_delete(buf_T *buf, linenr_T lnum,
   // Deletes at the end of the line have different behaviour than the normal
   // case when deleted.
   // Cleanup any marks that are floating beyond the end of line.
-  int line_length = len_of_line_inclusive_white_space(buf, lnum);
-  if (line_length == 0) {
-    line_length = BufPosStartCol;
-  }
-  FOR_ALL_EXTMARKS(buf, STARTING_NAMESPACE, lnum, line_length, lnum, -1, {
+  int eol = len_of_line_inclusive_white_space(buf, lnum) + 1;
+  FOR_ALL_EXTMARKS(buf, STARTING_NAMESPACE, lnum, eol, lnum, -1, {
     extmark_update(extmark, buf, extmark->ns_id, extmark->mark_id,
-                   extline->lnum, (colnr_T)line_length, kExtmarkNoUndo, &mitr);
+                   extline->lnum, (colnr_T)eol, kExtmarkNoUndo, &mitr);
   })
 
   // Record the undo for the actual move

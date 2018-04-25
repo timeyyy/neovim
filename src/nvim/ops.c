@@ -1631,29 +1631,27 @@ setmarks:
   // + 1 to change to buhttps://www.youtube.com/watch?v=kdEftS89rLYf mode, then plus 1 because we only move marks after
   // the deleted col
   colnr_T mincol = oap->start.col + 1 + 1;
-  colnr_T endcol = oap->end.col + 1 + 1;
+  colnr_T endcol;
   if (oap->motion_type == kMTBlockWise) {
     // TODO(timeyyy): refactor extmark_col_adjust to take lnumstart, lnum_end ?
+    endcol = bd.end_vcol + 1;
     for (lnum = curwin->w_cursor.lnum; lnum <= oap->end.lnum; lnum++) {
-      extmark_col_adjust_delete(curbuf, lnum, mincol, bd.end_vcol + 1,
+      extmark_col_adjust_delete(curbuf, lnum, mincol, endcol,
                                 kExtmarkUndo);
     }
-  } else if (oap->motion_type == kMTCharWise) {
-    // Delete characters within one line,
-    // The case with multiple lines is handled by do_join
-    if (oap->line_count == 1) {
-      lnum = curwin->w_cursor.lnum;
-      if (oap->is_VIsual) {
-        // + 1 to change to buf mode, then plus 1 because we copy one more than
-        // what    } we modify
-        endcol = oap->end.col + 1 + 1;
-      } else {
-        // for some reason the end.col in normal modde is + 1 as when
-        // in visual mode
-        endcol = oap->end.col + 1;
-      }
-      extmark_col_adjust_delete(curbuf, lnum, mincol, endcol, kExtmarkUndo);
+
+  // Delete characters within one line,
+  // The case with multiple lines is handled by do_join
+  } else if (oap->motion_type == kMTCharWise && oap->line_count == 1) {
+    // + 1 to change to buf mode, then plus 1 to fit function requirements
+    endcol = oap->end.col + 1 + 1;
+
+    lnum = curwin->w_cursor.lnum;
+    if (oap->is_VIsual) {
+      // for some reason we need an extra +1 in visual mode
+      endcol = endcol + 1;
     }
+    extmark_col_adjust_delete(curbuf, lnum, mincol, endcol, kExtmarkUndo);
   }
   return OK;
 }
