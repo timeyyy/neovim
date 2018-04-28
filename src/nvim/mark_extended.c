@@ -635,7 +635,7 @@ void extmark_apply_undo(ExtmarkUndoObject undo_info, bool undo)
     if (undo) {
       mincol = undo_info.data.col_adjust_delete.mincol;
       col_amount = (undo_info.data.col_adjust_delete.endcol
-                    - undo_info.data.col_adjust_delete.mincol);
+                    - undo_info.data.col_adjust_delete.mincol) + 1;
       extmark_col_adjust(curbuf,
                          undo_info.data.col_adjust_delete.lnum,
                          mincol,
@@ -857,7 +857,7 @@ long update_variably(colnr_T mincol, colnr_T current, long endcol)
   // Mark outside of range
   } else {
     // -1 because a delete of width 0 should still move marks
-    col_amount = -(endcol - mincol);
+    col_amount = -(endcol - mincol) - 1;
   }
   return col_amount;
 }
@@ -1037,7 +1037,11 @@ void extmark_col_adjust_delete(buf_T *buf, linenr_T lnum,
                                ExtmarkOp undo)
 {
   colnr_T start_effected_range = mincol;
-  assert(start_effected_range <= endcol);
+// assert(start_effected_range <= endcol);
+  if (start_effected_range > endcol) {
+    int a = 1;
+  }
+
 
   bool marks_moved;
   if (undo == kExtmarkUndo) {

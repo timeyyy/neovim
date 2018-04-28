@@ -1647,9 +1647,13 @@ setmarks:
     endcol = oap->end.col + 1 + 1;
 
     lnum = curwin->w_cursor.lnum;
-    if (oap->is_VIsual) {
-      // for some reason we need an extra +1 in visual mode
-      endcol = endcol + 1;
+    if (oap->is_VIsual == false) {
+      // for some reason we required this :/
+      endcol = endcol - 1;
+      // for some reason we required this :/
+      if (endcol < mincol) {
+        endcol=mincol;
+      }
     }
     extmark_col_adjust_delete(curbuf, lnum, mincol, endcol, kExtmarkUndo);
   }
