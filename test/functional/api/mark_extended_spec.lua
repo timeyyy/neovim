@@ -23,6 +23,8 @@ local rv2 = nil
 local buf = nil
 
 local function check_undo_redo(buf, ns, mark, sr, sc, er, ec) --s = start, e = end
+  rv = buffer('lookup_mark', buf, ns, mark)
+  eq({mark, er, ec}, rv)
   feed("u")
   rv = buffer('lookup_mark', buf, ns, mark)
   eq(sr, rv[2])
@@ -1079,29 +1081,29 @@ describe('Extmarks buffer api', function()
     check_undo_redo(buf, ns, marks[2], 1, 6, 1, 8)
   end)
 
-  it('substitutes over range insert text > deleted #testing', function()
+  it('substitutes over range insert text > deleted #extmarks', function()
     -- do_sub in ex_cmds.c
     feed('A<cr>x34xx<esc>')
     feed('A<cr>xxx34<esc>')
     buffer('set_mark', buf, ns, marks[1], 1, 3)
     buffer('set_mark', buf, ns, marks[2], 2, 2)
     buffer('set_mark', buf, ns, marks[3], 3, 5)
-    feed(':1,3s/34/xxx<cr>')
+    feed(':1,3s/34/xxx<cr><esc>')
     check_undo_redo(buf, ns, marks[1], 1, 3, 1, 6)
     check_undo_redo(buf, ns, marks[2], 2, 2, 2, 5)
-    check_undo_redo(buf, ns, marks[2], 3, 3, 2, 5)
+    check_undo_redo(buf, ns, marks[3], 3, 5, 3, 7)
   end)
 
   it('substitutes multiple matches in a line #testing', function()
     -- do_sub in ex_cmds.c
-    feed('A<cr>3x3x3<esc>')
+    feed('o<cr>3x3x3<esc>')
     buffer('set_mark', buf, ns, marks[1], 2, 1)
     buffer('set_mark', buf, ns, marks[2], 2, 3)
     buffer('set_mark', buf, ns, marks[3], 2, 5)
-    feed(':s/3/yy<cr>')
-    check_undo_redo(buf, ns, marks[1], 1, 3, 1, 6)
-    check_undo_redo(buf, ns, marks[2], 2, 2, 2, 5)
-    check_undo_redo(buf, ns, marks[2], 2, 2, 2, 5)
+    feed(':s/3/yy/g<cr><esc>')
+    check_undo(buf, ns, marks[1], 2, 1, 2, 3)
+    -- check_undo_redo(buf, ns, marks[2], 2, 3, 2, 5)
+    -- check_undo_redo(buf, ns, marks[3], 2, 5, 2, 7)
   end)
 
   it('substitions over multiple lines #fail', function()
