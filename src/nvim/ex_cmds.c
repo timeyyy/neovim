@@ -3253,6 +3253,8 @@ static buf_T *do_sub(exarg_T *eap, proftime_T timeout)
   int save_ma = 0;
   int save_b_changed = curbuf->b_changed;
   bool preview = (State & CMDPREVIEW);
+  extmark_sub_vec_t extmark_sub = KV_INITIAL_VALUE;
+  ExtmarkSubObject sub_obj;
 
   // inccomand tests fail without this check
   if (!preview) {
@@ -3881,11 +3883,15 @@ static buf_T *do_sub(exarg_T *eap, proftime_T timeout)
             // Adjust extmarks, by delete and then insert
             i = lnum - eap->line1;
             i = 0;
+            // Collect information required for moving extmarks
             if (regmatch.startpos[i].col != -1) {
-              extmark_move_regmatch_single(regmatch.startpos[i],
-                                           regmatch.endpos[i],
-                                           lnum,
-                                           sublen);
+              assert(regmatch.startpos[1].lnum == -1);
+              ExtmarkSubObject sub_obj;
+              sub_obj.sublen = sublen;
+              sub_obj.lnum = lnum;
+              sub_obj.startpos = regmatch.startpos[0];
+              sub_obj.endpos = regmatch.endpos[0];
+              kv_push(extmark_sub, sub_obj);
             }
           }
 
@@ -4167,6 +4173,16 @@ skip:
       }
     }
   }
+  // Move extmarks in reverse order to avoid moving marks we just moved...
+  size_t n = kv_size(extmark_sub);
+  for (size_t i = 0; i < n; i++) {
+    sub_obj = kv_Z(extmark_sub, i);
+    extmark_move_regmatch_single(sub_obj.startpos,
+                                 sub_obj.endpos,
+                                 sub_obj.lnum,
+                                 sub_obj.sublen);
+  }
+  kv_destroy(extmark_sub);
 
   kv_destroy(preview_lines.subresults);
 

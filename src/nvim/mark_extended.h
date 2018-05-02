@@ -237,6 +237,16 @@ struct undo_object {
 
 typedef kvec_t(ExtmarkUndoObject) extmark_undo_vec_t;
 
+// For doing move of extmarks in substitutions
+typedef struct {
+  lpos_T startpos;
+  lpos_T endpos;
+  linenr_T lnum;
+  int sublen;
+} ExtmarkSubObject;
+
+typedef kvec_t(ExtmarkSubObject) extmark_sub_vec_t;
+
 #ifdef INCLUDE_GENERATED_DECLARATIONS
 # include "mark_extended.h.generated.h"
 #endif
