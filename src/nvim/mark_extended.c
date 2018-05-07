@@ -599,6 +599,33 @@ void u_extmark_copy(buf_T *buf,
   });
 }
 
+void u_extmark_copy_place(buf_T *buf,
+                          linenr_T l_lnum,
+                          colnr_T l_col,
+                          linenr_T u_lnum,
+                          colnr_T u_col,
+                          linenr_T p_lnum,
+                          colnr_T p_col)
+{
+  u_header_T  *uhp = force_get_undo_header(buf);
+  if (!uhp) {
+    return;
+  }
+
+  ExtmarkCopyPlace copy_place;
+  copy_place.l_lnum = l_lnum;
+  copy_place.l_col = l_col;
+  copy_place.u_lnum = u_lnum;
+  copy_place.u_col = u_col;
+  copy_place.p_lnum = p_lnum;
+  copy_place.p_col = p_col;
+
+  ExtmarkUndoObject undo = { .type = kExtmarkCopyPlace,
+                             .data.copy_place = copy_place };
+
+  kv_push(uhp->uh_extmark, undo);
+}
+
 // undo or redo an extmark operation
 void extmark_apply_undo(ExtmarkUndoObject undo_info, bool undo)
 {
@@ -685,7 +712,7 @@ void extmark_apply_undo(ExtmarkUndoObject undo_info, bool undo)
                    line1, line2, amount, amount_after, kExtmarkNoUndo, false);
   // kExtmarkCopy
   } else if (undo_info.type == kExtmarkCopy) {
-    // Redo should be handled by kColAdjustDelete
+    // Redo should be handled by kColAdjustDelete or kExtmarkCopyPlace
     if (undo) {
       extmark_set(curbuf,
                   undo_info.data.copy.ns_id,
@@ -693,6 +720,19 @@ void extmark_apply_undo(ExtmarkUndoObject undo_info, bool undo)
                   undo_info.data.copy.lnum,
                   undo_info.data.copy.col,
                   kExtmarkNoUndo);
+    }
+  // uses extmark_copy_and_place
+  } else if (undo_info.type == kExtmarkCopyPlace) {
+    // Redo, undo is handle by kExtmarkCopy
+    if (!undo) {
+      extmark_copy_and_place(curbuf,
+                             undo_info.data.copy_place.l_lnum,
+                             undo_info.data.copy_place.l_col,
+                             undo_info.data.copy_place.u_lnum,
+                             undo_info.data.copy_place.u_col,
+                             undo_info.data.copy_place.p_lnum,
+                             undo_info.data.copy_place.p_col,
+                             kExtmarkNoUndo);
     }
   // kAdjustMove
   } else if (undo_info.type == kAdjustMove) {
@@ -1129,15 +1169,15 @@ void extmark_copy_and_place(buf_T *buf,
                             colnr_T l_col,
                             linenr_T u_lnum,
                             colnr_T u_col,
-                            linenr_T place_lnum,
-                            colnr_T place_col,
+                            linenr_T p_lnum,
+                            colnr_T p_col,
                             ExtmarkOp undo)
 {
-  // if (undo == kExtmarkUndo) {
+  bool marks_moved = false;
+  if (undo == kExtmarkUndo) {
     // Copy marks that would be effected by delete
-    // -1 because we need to restore if a mark existed at the start pos
-    // u_extmark_copy(buf, l_lnum, l_col, u_lnum, u_col);
-  // }
+    u_extmark_copy(buf, l_lnum, l_col, u_lnum, u_col);
+  }
 
   // Move extmarks to their final position
   kbitr_markitems_t mitr;
@@ -1161,16 +1201,17 @@ void extmark_copy_and_place(buf_T *buf,
         extmark = &((&mitr)->p->x->key)[(&mitr)->p->i];
         if (u_col != -1 && extmark->line->lnum == u_lnum && extmark->col > u_col) { break; }
         {
-          extmark_update(extmark, buf, extmark->ns_id, extmark->mark_id, place_lnum, place_col, kExtmarkNoUndo, &mitr);
+          marks_moved = true;
+          extmark_update(extmark, buf, extmark->ns_id, extmark->mark_id, p_lnum, p_col, kExtmarkNoUndo, &mitr);
         };
       }
     };
   }
 
   // Record the undo for the actual move
-  // if (marks_moved && undo == kExtmarkUndo) {
-    // u_extmark_col_adjust_delete(buf, lnum, mincol, endcol);
-  // }
+  if (marks_moved && undo == kExtmarkUndo) {
+    u_extmark_copy_place(buf, l_lnum, l_col, u_lnum, u_col, p_lnum, p_col);
+  }
 }
 
 

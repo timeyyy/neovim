@@ -209,6 +209,15 @@ typedef struct {
   colnr_T col;
 } ExtmarkCopy;
 
+typedef struct {
+  linenr_T l_lnum;
+  colnr_T l_col;
+  linenr_T u_lnum;
+  colnr_T u_col;
+  linenr_T p_lnum;
+  colnr_T p_col;
+} ExtmarkCopyPlace;
+
 typedef struct undo_object ExtmarkUndoObject;
 
 typedef enum {
@@ -220,6 +229,7 @@ typedef enum {
   kExtmarkDel,
   kExtmarkUpdate,
   kExtmarkCopy,
+  kExtmarkCopyPlace,
 } UndoObjectType;
 
 struct undo_object {
@@ -232,6 +242,7 @@ struct undo_object {
     ExtmarkSet set;
     ExtmarkUpdate update;
     ExtmarkCopy copy;
+    ExtmarkCopyPlace copy_place;
   } data;
 };
 
