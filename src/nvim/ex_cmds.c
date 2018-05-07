@@ -3198,6 +3198,16 @@ static void extmark_move_regmatch_multi(lpos_T startpos,
 
   extmark_copy_and_place(curbuf, l_lnum, l_col, u_lnum, u_col, p_lnum, p_col,
                          kExtmarkUndo);
+
+  // Always move extmarks - Here we move the only lnum where the cursor is
+  // The previous mark_adjust takes care of the lines after
+  extmark_adjust(curbuf,
+                 u_lnum + lnum_added + 1L,
+                 u_lnum + 1L,
+                 MAXLNUM,
+                 (long)lnum_added,
+                 kExtmarkUndo,
+                 false);
 }
 
 /*

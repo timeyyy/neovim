@@ -53,7 +53,7 @@ describe('Extmarks buffer api', function()
 
   before_each(function()
     -- Initialize some namespaces and insert 12345 into a buffer
-    marks = {1, 2, 3, 4}
+    marks = {1, 2, 3, 4, 5, 6}
     positions = {{1, 1,}, {1, 3}, {1, 4}}
 
     ns_string = "my-fancy-plugin"
@@ -1107,25 +1107,19 @@ describe('Extmarks buffer api', function()
     check_undo_redo(buf, ns, marks[3], 1, 5, 1, 9)
   end)
 
-  it('substitions over multiple lines #fail', function()
-    feed('A<cr>67890<esc>')
+  it('substitions over multiple lines #extmarks2', function()
+    feed('A<cr>67890<cr>xx<esc>')
     buffer('set_mark', buf, ns, marks[1], 1, 4)
     buffer('set_mark', buf, ns, marks[2], 1, 5)
     buffer('set_mark', buf, ns, marks[3], 2, 1)
     buffer('set_mark', buf, ns, marks[4], 2, 6)
+    buffer('set_mark', buf, ns, marks[5], 3, 1)
     feed([[:1,2s:5\n:5 <cr>]])
-    rv = buffer('lookup_mark', buf, ns, marks[1])
-    eq({marks[1], 1, 4}, rv)
-    rv = buffer('lookup_mark', buf, ns, marks[2])
-    eq({marks[2], 1, 12}, rv)
-    rv = buffer('lookup_mark', buf, ns, marks[3])
-    eq({marks[3], 1, 12}, rv)
-    rv = buffer('lookup_mark', buf, ns, marks[4])
-    eq({marks[4], 1, 12}, rv)
     check_undo_redo(buf, ns, marks[1], 1, 4, 1, 4)
     check_undo_redo(buf, ns, marks[2], 1, 5, 1, 12)
     check_undo_redo(buf, ns, marks[3], 2, 1, 1, 12)
     check_undo_redo(buf, ns, marks[4], 2, 6, 1, 12)
+    check_undo_redo(buf, ns, marks[5], 3, 1, 2, 1)
   end)
 
   it('using <c-a> when increase in order of magnitude #extmarks', function()
