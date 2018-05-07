@@ -1069,7 +1069,7 @@ void extmark_col_adjust_delete(buf_T *buf, linenr_T lnum,
 }
 
 // Adjust extmark row for inserted/deleted rows (columns stay fixed).
-void extmark_adjust(buf_T * buf,
+void extmark_adjust(buf_T *buf,
                     linenr_T line1,
                     linenr_T line2,
                     long amount,
@@ -1122,6 +1122,58 @@ void extmark_adjust(buf_T * buf,
     u_extmark_adjust(buf, line1, line2, amount, amount_after);
   }
 }
+
+// Range points to copy
+void extmark_copy_and_place(buf_T *buf,
+                            linenr_T l_lnum,
+                            colnr_T l_col,
+                            linenr_T u_lnum,
+                            colnr_T u_col,
+                            linenr_T place_lnum,
+                            colnr_T place_col,
+                            ExtmarkOp undo)
+{
+  // if (undo == kExtmarkUndo) {
+    // Copy marks that would be effected by delete
+    // -1 because we need to restore if a mark existed at the start pos
+    // u_extmark_copy(buf, l_lnum, l_col, u_lnum, u_col);
+  // }
+
+  // Move extmarks to their final position
+  kbitr_markitems_t mitr;
+  ExtendedMark mt;
+  mt.ns_id = 1;
+  mt.mark_id = 0;
+  mt.line = ((void *) 0);
+  kbitr_extlines_t itr;
+  ExtMarkLine t;
+  t.lnum = l_lnum == -1 ? 1 : l_lnum;
+  if (!kb_itr_get_extlines(&buf->b_extlines, &t, &itr)) { kb_itr_next_extlines(&buf->b_extlines, &itr); }
+  ExtMarkLine *extline;
+  for (; ((&itr)->p >= (&itr)->stack); kb_itr_next_extlines(&buf->b_extlines, &itr)) {
+    extline = ((&itr)->p->x->key)[(&itr)->p->i];
+    if (extline->lnum > u_lnum && u_lnum != -1) { break; }
+    {
+      mt.col = (l_col == -1 || extline->lnum != l_lnum) ? 1 : l_col;
+      if (!kb_itr_get_markitems(&extline->items, mt, &mitr)) { kb_itr_next_markitems(&extline->items, &mitr); }
+      ExtendedMark *extmark;
+      for (; ((&mitr)->p >= (&mitr)->stack); kb_itr_next_markitems(&extline->items, &mitr)) {
+        extmark = &((&mitr)->p->x->key)[(&mitr)->p->i];
+        if (u_col != -1 && extmark->line->lnum == u_lnum && extmark->col > u_col) { break; }
+        {
+          extmark_update(extmark, buf, extmark->ns_id, extmark->mark_id, place_lnum, place_col, kExtmarkNoUndo, &mitr);
+        };
+      }
+    };
+  }
+
+  // Record the undo for the actual move
+  // if (marks_moved && undo == kExtmarkUndo) {
+    // u_extmark_col_adjust_delete(buf, lnum, mincol, endcol);
+  // }
+}
+
+
 
 // Get reference to line in kbtree_t, allocating it if neccessary.
 ExtMarkLine *extline_ref(kbtree_t(extlines) *b, linenr_T lnum)

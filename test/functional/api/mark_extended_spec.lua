@@ -53,7 +53,7 @@ describe('Extmarks buffer api', function()
 
   before_each(function()
     -- Initialize some namespaces and insert 12345 into a buffer
-    marks = {1, 2, 3}
+    marks = {1, 2, 3, 4}
     positions = {{1, 1,}, {1, 3}, {1, 4}}
 
     ns_string = "my-fancy-plugin"
@@ -1108,39 +1108,20 @@ describe('Extmarks buffer api', function()
   end)
 
   it('substitions over multiple lines #fail', function()
-    feed('A<cr>67890<cr>xxxxx<esc>')
-    buffer('set_mark', buf, ns, marks[1], 2, 3)
-    -- . = any char except new line
-    -- ^1 = line starts with 1
-    -- ^6 = line starts with 6
-    -- [range]/substitue/
-    -- <range> from ^1 to ^6 </range>
-    -- <substitue> </substitue>
-    -- \n\(.\) = find all new line chars, add a back ref on the next char
-    -- insert a space and the matched char that was after the newline ` \1`
-    feed([[:/^1/,/^6/s:\n\(.\): \1:<cr>]])
+    feed('A<cr>67890<esc>')
+    buffer('set_mark', buf, ns, marks[1], 1, 4)
+    buffer('set_mark', buf, ns, marks[2], 1, 5)
+    buffer('set_mark', buf, ns, marks[3], 2, 1)
+    buffer('set_mark', buf, ns, marks[4], 2, 6)
+    feed([[:1,2s:5\n:5 <cr>]])
     rv = buffer('lookup_mark', buf, ns, marks[1])
-    eq({marks[1], 1, 9}, rv)
-    screen:expect([[
-      ^12345 67890    |
-      xxxxx          |
-      ~              |
-      ~              |
-      ~              |
-      ~              |
-      ~              |
-      ~              |
-      ~              |
-                     |
-    ]])
-    -- startpos[0] = 0, 5
-    -- endpos[0] = 1, 1
-    --
-    -- startpos[1] = 1, 0
-    -- endpos[1] = 1, 1
-    --
-    -- startpos[1] = -1, -1
-    -- endpos[1] = -1, -1
+    eq({marks[1], 1, 4}, rv)
+    rv = buffer('lookup_mark', buf, ns, marks[2])
+    eq({marks[2], 1, 12}, rv)
+    rv = buffer('lookup_mark', buf, ns, marks[3])
+    eq({marks[3], 1, 12}, rv)
+    rv = buffer('lookup_mark', buf, ns, marks[4])
+    eq({marks[4], 1, 12}, rv)
   end)
 
   it('using <c-a> when increase in order of magnitude #extmarks', function()

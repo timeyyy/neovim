@@ -242,7 +242,9 @@ typedef struct {
   lpos_T startpos;
   lpos_T endpos;
   linenr_T lnum;
+  linenr_T lnum_added;
   int sublen;
+  int eollen;
 } ExtmarkSubObject;
 
 typedef kvec_t(ExtmarkSubObject) extmark_sub_vec_t;

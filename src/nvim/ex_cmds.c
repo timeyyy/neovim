@@ -3171,10 +3171,36 @@ static void extmark_move_regmatch_single(lpos_T startpos,
 }
 
 // lnum is starting lnum
-static void extmark_move_regmatch_multi(regmmatch_T regmatch,
-                                        int start_index,
-                                        int sublen)
+static void extmark_move_regmatch_multi(lpos_T startpos,
+                                        lpos_T endpos,
+                                        linenr_T lnum,
+                                        linenr_T lnum_added,
+                                        int sublen,
+                                        int eollen)
 {
+  colnr_T mincol = startpos.col + 1;
+
+  linenr_T l_lnum = lnum;
+  colnr_T l_col = mincol;
+  linenr_T u_lnum = lnum + endpos.lnum;
+  colnr_T u_col = eollen; // this has to be the last part after the match on the line
+
+  linenr_T p_lnum;
+  linenr_T p_col;
+  if (lnum_added <= 0) {
+    p_lnum = l_lnum;
+    p_col = mincol + sublen; // probably better is mincol + strlen(sub)
+  } else {
+    p_lnum = u_lnum;
+    p_col = u_col + sublen;
+
+  }
+
+  extmark_copy_and_place(curbuf, l_lnum, l_col, u_lnum, u_col, p_lnum, p_col,
+                         kExtmarkUndo);
+}
+
+/*
   int i;
   colnr_T mincol;
   colnr_T col_amount;
@@ -3207,6 +3233,7 @@ static void extmark_move_regmatch_multi(regmmatch_T regmatch,
                                current_lnum,
                                sublen);
 }
+*/
 
 
 /// Perform a substitution from line eap->line1 to line eap->line2 using the
@@ -3255,6 +3282,7 @@ static buf_T *do_sub(exarg_T *eap, proftime_T timeout)
   bool preview = (State & CMDPREVIEW);
   extmark_sub_vec_t extmark_sub = KV_INITIAL_VALUE;
   ExtmarkSubObject sub_obj;
+  bool multiline_sub;
 
   // inccomand tests fail without this check
   if (!preview) {
@@ -3421,6 +3449,7 @@ static buf_T *do_sub(exarg_T *eap, proftime_T timeout)
   // Check for a match on each line.
   // If preview: limit to max('cmdwinheight', viewport).
   linenr_T line2 = eap->line2;
+
   for (linenr_T lnum = eap->line1;
        lnum <= line2 && !got_quit && !aborting()
        && (!preview || preview_lines.lines_needed <= (linenr_T)p_cwh
@@ -3879,19 +3908,52 @@ static buf_T *do_sub(exarg_T *eap, proftime_T timeout)
 
           // TODO(timeyyy): should we be moving when preview?
           // TODO(timeyyy): multiline regmatches ?
+          // Adjust extmarks, by delete and then insert
           if (!preview) {
-            // Adjust extmarks, by delete and then insert
-            i = lnum - eap->line1;
-            i = 0;
-            // Collect information required for moving extmarks
-            if (regmatch.startpos[i].col != -1) {
-              assert(regmatch.startpos[1].lnum == -1);
-              ExtmarkSubObject sub_obj;
-              sub_obj.sublen = sublen;
-              sub_obj.lnum = lnum;
-              sub_obj.startpos = regmatch.startpos[0];
-              sub_obj.endpos = regmatch.endpos[0];
-              kv_push(extmark_sub, sub_obj);
+            size_t newline_in_pat = strcnt(pat, '\\n');
+            size_t newline_in_sub = strcnt(sub, '\\r');
+            if (newline_in_pat || newline_in_sub) {
+//              assert(regmatch.startpos[1].lnum == -1);
+              multiline_sub = true;
+
+              int no_of_lines_changed = newline_in_sub - newline_in_pat;
+              if (no_of_lines_changed <= 0) {
+                ExtmarkSubObject sub_obj;
+                char *a = strrchr(sub, '\r');
+                int a2;
+                if (a == NULL) {
+                  a2 = 0;
+                } else {
+                  a2 = strlen(a);
+                }
+                int b = STRLEN(sub_firstline);
+                int c = b - a2;
+                sub_obj.sublen = strlen(sub) + b;
+                sub_obj.eollen = c + 1;
+                sub_obj.lnum = lnum;
+                sub_obj.lnum_added = (linenr_T)no_of_lines_changed;
+                sub_obj.startpos = regmatch.startpos[0];
+                sub_obj.endpos = regmatch.endpos[0];
+
+                kv_push(extmark_sub, sub_obj);
+              }
+              // } else {
+              // }
+            // Collect information required for moving extmarks WITHOUT \n, \r
+            } else {
+              multiline_sub = false;
+
+              if (regmatch.startpos[0].col != -1) {
+//                assert(regmatch.startpos[1].lnum == -1);
+
+                ExtmarkSubObject sub_obj;
+                sub_obj.sublen = sublen;
+                sub_obj.lnum = lnum;
+                sub_obj.startpos = regmatch.startpos[0];
+                sub_obj.endpos = regmatch.endpos[0];
+
+                kv_push(extmark_sub, sub_obj);
+              }
             }
           }
 
@@ -3910,7 +3972,7 @@ static buf_T *do_sub(exarg_T *eap, proftime_T timeout)
                 ml_append(lnum - 1, new_start,
                           (colnr_T)(p1 - new_start + 1), false);
                 mark_adjust(lnum + 1, (linenr_T)MAXLNUM, 1L, 0L, false,
-                            kExtmarkUndo);
+                            kExtmarkNOOP);
 
                 if (subflags.do_ask) {
                   appended_lines(lnum - 1, 1L);
@@ -4002,7 +4064,7 @@ skip:
               for (i = 0; i < nmatch_tl; ++i)
                 ml_delete(lnum, (int)FALSE);
               mark_adjust(lnum, lnum + nmatch_tl - 1,
-                          (long)MAXLNUM, -nmatch_tl, false, kExtmarkUndo);
+                          (long)MAXLNUM, -nmatch_tl, false, kExtmarkNOOP);
               if (subflags.do_ask) {
                 deleted_lines(lnum, nmatch_tl);
               }
@@ -4175,12 +4237,24 @@ skip:
   }
   // Move extmarks in reverse order to avoid moving marks we just moved...
   size_t n = kv_size(extmark_sub);
-  for (size_t i = 0; i < n; i++) {
-    sub_obj = kv_Z(extmark_sub, i);
-    extmark_move_regmatch_single(sub_obj.startpos,
-                                 sub_obj.endpos,
-                                 sub_obj.lnum,
-                                 sub_obj.sublen);
+  if (multiline_sub) {
+    for (size_t i = 0; i < n; i++) {
+      sub_obj = kv_A(extmark_sub, i);
+      extmark_move_regmatch_multi(sub_obj.startpos,
+                                  sub_obj.endpos,
+                                  sub_obj.lnum,
+                                  sub_obj.lnum_added,
+                                  sub_obj.sublen,
+                                  sub_obj.eollen);
+    }
+  } else {
+    for (size_t i = 0; i < n; i++) {
+      sub_obj = kv_Z(extmark_sub, i);
+      extmark_move_regmatch_single(sub_obj.startpos,
+                                   sub_obj.endpos,
+                                   sub_obj.lnum,
+                                   sub_obj.sublen);
+    }
   }
   kv_destroy(extmark_sub);
 
