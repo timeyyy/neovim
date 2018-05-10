@@ -120,13 +120,17 @@ describe('Extmarks buffer api', function()
   it('querying for information and ranges #extmarks', function()
     -- add some more marks
     for i, m in ipairs(marks) do
+      if positions[i] ~= nil then
         rv = buffer('set_mark', buf, ns, m, positions[i][1], positions[i][2])
         eq(1, rv)
+      end
     end
 
     rv = buffer('get_marks', buf, ns, TO_START, TO_END, ALL, 0)
     for i, m in ipairs(marks) do
+      if positions[i] ~= nil then
         eq({m, positions[i][1], positions[i][2]}, rv[i])
+      end
     end
 
     -- next with mark id
@@ -223,8 +227,10 @@ describe('Extmarks buffer api', function()
   it('querying for information with amount #extmarks', function()
     -- add some more marks
     for i, m in ipairs(marks) do
+      if positions[i] ~= nil then
         rv = buffer('set_mark', buf, ns, m, positions[i][1], positions[i][2])
         eq(1, rv)
+      end
     end
 
     rv = buffer('get_marks', buf, ns, TO_START, TO_END, 1, 0)
