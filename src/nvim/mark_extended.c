@@ -1131,6 +1131,7 @@ void extmark_adjust(buf_T *buf,
     return;
   }
 
+  int eol;
   bool marks_exist = false;
   linenr_T *lp;
   FOR_ALL_EXTMARKLINES(buf, MINLNUM, MAXLNUM, {
@@ -1146,7 +1147,15 @@ void extmark_adjust(buf_T *buf,
       // Delete the line
       if (amount == MAXLNUM) {
         FOR_ALL_EXTMARKS_IN_LINE(extline->items, {
-          extmark_del(buf, extmark->ns_id, extmark->mark_id, kExtmarkUndo);
+          eol = len_of_line_inclusive_white_space(buf, extline->lnum - 1) + 1;
+          extmark_copy_and_place(curbuf,
+                                 extline->lnum,
+                                 MINCOL,
+                                 extline->lnum,
+                                 MAXCOL,
+                                 extline->lnum - 1,
+                                 eol,
+                                 kExtmarkUndo);
         })
         // TODO(timeyyy): make freeing the line a undoable action
         // see branch extmarks_broken_delete_lines
