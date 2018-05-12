@@ -1108,7 +1108,7 @@ describe('Extmarks buffer api', function()
     check_undo_redo(buf, ns, marks[3], 1, 5, 1, 9)
   end)
 
-  it('substitions over multiple lines #extmarks2', function()
+  it('substitions over multiple lines #extmarks', function()
     feed('A<cr>67890<cr>xx<esc>')
     buffer('set_mark', buf, ns, marks[1], 1, 4)
     buffer('set_mark', buf, ns, marks[2], 1, 5)

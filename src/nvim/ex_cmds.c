@@ -3203,7 +3203,7 @@ static void extmark_move_regmatch_multi(lpos_T startpos,
   // The previous mark_adjust takes care of the lines after
   extmark_adjust(curbuf,
                  u_lnum + lnum_added + 1L,
-                 u_lnum + 1L,
+                 u_lnum + lnum_added + 1L,
                  MAXLNUM,
                  (long)lnum_added,
                  kExtmarkUndo,
