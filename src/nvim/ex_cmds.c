@@ -3171,30 +3171,15 @@ static void extmark_move_regmatch_single(lpos_T startpos,
 }
 
 // lnum is starting lnum
-static void extmark_move_regmatch_multi(lpos_T startpos,
-                                        lpos_T endpos,
-                                        linenr_T lnum,
-                                        linenr_T lnum_added,
-                                        int sublen,
-                                        int eollen)
+static void extmark_move_regmatch_multi(linenr_T l_lnum,
+                                        colnr_T l_col,
+                                        linenr_T u_lnum,
+                                        colnr_T u_col,
+                                        linenr_T p_lnum,
+                                        colnr_T p_col,
+                                        linenr_T lnum_added)
 {
-  colnr_T mincol = startpos.col + 1;
 
-  linenr_T l_lnum = lnum;
-  colnr_T l_col = mincol;
-  linenr_T u_lnum = lnum + endpos.lnum;
-  colnr_T u_col = eollen; // this has to be the last part after the match on the line
-
-  linenr_T p_lnum;
-  linenr_T p_col;
-  if (lnum_added <= 0) {
-    p_lnum = l_lnum;
-    p_col = mincol + sublen; // probably better is mincol + strlen(sub)
-  } else {
-    p_lnum = u_lnum;
-    p_col = u_col + sublen;
-
-  }
 
   extmark_copy_and_place(curbuf, l_lnum, l_col, u_lnum, u_col, p_lnum, p_col,
                          kExtmarkUndo);
@@ -3292,7 +3277,7 @@ static buf_T *do_sub(exarg_T *eap, proftime_T timeout)
   bool preview = (State & CMDPREVIEW);
   extmark_sub_vec_t extmark_sub = KV_INITIAL_VALUE;
   ExtmarkSubObject sub_obj;
-  bool multiline_sub;
+  int no_of_lines_changed;
 
   // inccomand tests fail without this check
   if (!preview) {
@@ -3924,12 +3909,10 @@ static buf_T *do_sub(exarg_T *eap, proftime_T timeout)
             size_t newline_in_sub = strcnt(sub, '\\r');
             if (newline_in_pat || newline_in_sub) {
 //              assert(regmatch.startpos[1].lnum == -1);
-              multiline_sub = true;
-
-              int no_of_lines_changed = newline_in_sub - newline_in_pat;
+              ExtmarkSubObject sub_obj;
+              no_of_lines_changed = newline_in_sub - newline_in_pat;
               if (no_of_lines_changed <= 0) {
-                ExtmarkSubObject sub_obj;
-                char *a = strrchr(sub, '\r');
+                char *a = strrchr(sub, '\\r'); // TODO TEST WHEN \r in sub
                 int a2;
                 if (a == NULL) {
                   a2 = 0;
@@ -3938,20 +3921,50 @@ static buf_T *do_sub(exarg_T *eap, proftime_T timeout)
                 }
                 int b = STRLEN(sub_firstline);
                 int c = b - a2;
-                sub_obj.sublen = strlen(sub) + b;
-                sub_obj.eollen = c + 1;
-                sub_obj.lnum = lnum;
+
+                int eollen = c + 1;
+                int _sublen = strlen(sub) + b;
+                colnr_T mincol = regmatch.startpos[0].col + 1;
+
+                sub_obj.l_lnum = lnum;
+                sub_obj.l_col = mincol;
+                sub_obj.u_lnum = lnum + regmatch.endpos[0].lnum;
+                sub_obj.u_col = eollen;
+                sub_obj.p_lnum = lnum;
+                sub_obj.p_col = mincol + _sublen;
                 sub_obj.lnum_added = (linenr_T)no_of_lines_changed;
-                sub_obj.startpos = regmatch.startpos[0];
-                sub_obj.endpos = regmatch.endpos[0];
+
+                kv_push(extmark_sub, sub_obj);
+              } else {
+                char *a = strrchr(sub, '\\r'); // TODO TEST WEHEN 'n in pat
+                int a2;
+                if (a == NULL) {
+                  a2 = 0;
+                } else {
+                  a2 = strlen(a);
+                }
+                int b = STRLEN(sub_firstline);
+                int c = b - a2;
+
+                int eollen = c + 1;
+                int _sublen = strlen(sub) + b;
+                colnr_T mincol = regmatch.startpos[0].col + 1;
+
+    // p_lnum = u_lnum;
+    // p_col = u_col + sublen;
+
+                sub_obj.l_lnum = lnum;
+                sub_obj.l_col = mincol;
+                sub_obj.u_lnum = lnum + regmatch.endpos[0].lnum;
+                sub_obj.u_col = eollen;
+                sub_obj.p_lnum = lnum;
+                sub_obj.p_col = mincol + _sublen;
 
                 kv_push(extmark_sub, sub_obj);
               }
-              // } else {
-              // }
             // Collect information required for moving extmarks WITHOUT \n, \r
             } else {
-              multiline_sub = false;
+              no_of_lines_changed = 0;
 
               if (regmatch.startpos[0].col != -1) {
 //                assert(regmatch.startpos[1].lnum == -1);
@@ -4245,19 +4258,20 @@ skip:
       }
     }
   }
-  // Move extmarks in reverse order to avoid moving marks we just moved...
   size_t n = kv_size(extmark_sub);
-  if (multiline_sub) {
+  if (no_of_lines_changed < 0) {
     for (size_t i = 0; i < n; i++) {
       sub_obj = kv_A(extmark_sub, i);
-      extmark_move_regmatch_multi(sub_obj.startpos,
-                                  sub_obj.endpos,
-                                  sub_obj.lnum,
-                                  sub_obj.lnum_added,
-                                  sub_obj.sublen,
-                                  sub_obj.eollen);
+      extmark_move_regmatch_multi(sub_obj.l_lnum,
+                                  sub_obj.l_col,
+                                  sub_obj.u_lnum,
+                                  sub_obj.u_col,
+                                  sub_obj.p_lnum,
+                                  sub_obj.p_col,
+                                  sub_obj.lnum_added);
     }
   } else {
+    // Move extmarks in reverse order to avoid moving marks we just moved...
     for (size_t i = 0; i < n; i++) {
       sub_obj = kv_Z(extmark_sub, i);
       extmark_move_regmatch_single(sub_obj.startpos,
