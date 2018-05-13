@@ -3170,7 +3170,6 @@ static void extmark_move_regmatch_single(lpos_T startpos,
   extmark_col_adjust(curbuf, lnum, mincol, 0, col_amount, kExtmarkUndo);
 }
 
-// lnum is starting lnum
 static void extmark_move_regmatch_multi(linenr_T l_lnum,
                                         colnr_T l_col,
                                         linenr_T u_lnum,
@@ -3179,10 +3178,9 @@ static void extmark_move_regmatch_multi(linenr_T l_lnum,
                                         colnr_T p_col,
                                         linenr_T lnum_added)
 {
-
-
-  extmark_copy_and_place(curbuf, l_lnum, l_col, u_lnum, u_col, p_lnum, p_col,
-                         kExtmarkUndo);
+  if (lnum_added <= 0) {
+    extmark_copy_and_place(curbuf, l_lnum, l_col, u_lnum, u_col, p_lnum, p_col,
+                           kExtmarkUndo);
 
   // Always move extmarks - Here we move the only lnum where the cursor is
   // The previous mark_adjust takes care of the lines after
@@ -3193,6 +3191,19 @@ static void extmark_move_regmatch_multi(linenr_T l_lnum,
                  (long)lnum_added,
                  kExtmarkUndo,
                  false);
+  } else {
+    extmark_adjust(curbuf,
+                   u_lnum + lnum_added,
+                   MAXLNUM,
+                   (long)lnum_added,
+                   (long)lnum_added,
+                   kExtmarkUndo,
+                   false);
+
+    extmark_copy_and_place(curbuf, l_lnum, l_col, u_lnum, u_col, p_lnum, p_col,
+                           kExtmarkUndo);
+
+  }
 }
 
 /*
@@ -3932,7 +3943,7 @@ static buf_T *do_sub(exarg_T *eap, proftime_T timeout)
                 sub_obj.u_col = eollen;
                 sub_obj.p_lnum = lnum;
                 sub_obj.p_col = mincol + _sublen;
-                sub_obj.lnum_added = (linenr_T)no_of_lines_changed;
+                sub_obj.lnum_added = no_of_lines_changed;
 
                 kv_push(extmark_sub, sub_obj);
               } else {
@@ -3950,15 +3961,13 @@ static buf_T *do_sub(exarg_T *eap, proftime_T timeout)
                 int _sublen = strlen(sub) + b;
                 colnr_T mincol = regmatch.startpos[0].col + 1;
 
-    // p_lnum = u_lnum;
-    // p_col = u_col + sublen;
-
                 sub_obj.l_lnum = lnum;
                 sub_obj.l_col = mincol;
                 sub_obj.u_lnum = lnum + regmatch.endpos[0].lnum;
-                sub_obj.u_col = eollen;
-                sub_obj.p_lnum = lnum;
-                sub_obj.p_col = mincol + _sublen;
+                sub_obj.u_col = MAXCOL;
+                sub_obj.p_lnum = lnum + no_of_lines_changed;
+                sub_obj.p_col = (colnr_T)a2;
+                sub_obj.lnum_added = no_of_lines_changed;
 
                 kv_push(extmark_sub, sub_obj);
               }
@@ -4270,8 +4279,19 @@ skip:
                                   sub_obj.p_col,
                                   sub_obj.lnum_added);
     }
-  } else {
+  } else if (no_of_lines_changed > 0) {
     // Move extmarks in reverse order to avoid moving marks we just moved...
+    for (size_t i = 0; i < n; i++) {
+      sub_obj = kv_A(extmark_sub, i);
+      extmark_move_regmatch_multi(sub_obj.l_lnum,
+                                  sub_obj.l_col,
+                                  sub_obj.u_lnum,
+                                  sub_obj.u_col,
+                                  sub_obj.p_lnum,
+                                  sub_obj.p_col,
+                                  sub_obj.lnum_added);
+    }
+  } else {
     for (size_t i = 0; i < n; i++) {
       sub_obj = kv_Z(extmark_sub, i);
       extmark_move_regmatch_single(sub_obj.startpos,
@@ -4280,6 +4300,7 @@ skip:
                                    sub_obj.sublen);
     }
   }
+
   kv_destroy(extmark_sub);
 
   kv_destroy(preview_lines.subresults);
