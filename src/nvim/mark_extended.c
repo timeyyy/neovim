@@ -89,6 +89,74 @@ static colnr_T check_col(buf_T *buf, linenr_T lnum, colnr_T col)
   return col;
 }
 
+int extmark_check(int a) {
+  ExtendedMark *seen_mark;
+  ExtMarkLine *seen_line;
+  ExtmarkArray duplicate_marks = KV_INITIAL_VALUE;
+  ExtmarkArray seen_marks = KV_INITIAL_VALUE;
+  ExtlineArray duplicate_lines = KV_INITIAL_VALUE;
+  ExtlineArray seen_lines = KV_INITIAL_VALUE;
+
+  int total_marks_from_line = 0;
+  int total_marks = 0;
+
+  FOR_ALL_EXTMARKLINES(curbuf, MINLNUM, MAXLNUM, {
+    size_t n = kv_size(seen_lines);
+    for (size_t i = 0; i < n; i++) {
+      seen_line = kv_A(seen_lines, i);
+      if (seen_line->lnum == extline->lnum) {
+        kv_push(duplicate_lines, extline);
+      }
+    }
+    kv_push(seen_lines, extline);
+    total_marks_from_line += kb_size(&extline->items);
+
+    FOR_ALL_EXTMARKS_IN_LINE(extline->items, {
+      size_t n = kv_size(seen_marks);
+      for (size_t i = 0; i < n; i++) {
+        seen_mark = kv_A(seen_marks, i);
+        if (seen_mark->mark_id == extmark->mark_id) {
+          kv_push(duplicate_marks, extmark);
+        }
+      }
+      kv_push(seen_marks, extmark);
+      total_marks += 1;
+    })
+  })
+
+//  if (kv_size(duplicate_lines)) {
+//    int a = 1;
+//  }
+//  assert(!kv_size(duplicate_lines));
+
+  if (total_marks != total_marks_from_line) {
+    return 0;
+  }
+  if (kv_size(duplicate_marks)) {
+    return 0;
+  }
+  assert(total_marks == total_marks_from_line);
+  assert(!kv_size(duplicate_marks));
+  return 1;
+}
+
+
+int nsmark_check(uint64_t id,
+                linenr_T lnum,
+                colnr_T col) {
+  return 1;
+  ExtendedMark *extmark = extmark_from_id(curbuf, 1, id);
+  if (extmark->line->lnum != lnum) {
+    int a = 1;
+  }
+
+  if (extmark->col != col) {
+    int a = 1;
+  }
+  assert(extmark->col == col);
+  assert(extmark->line->lnum == lnum);
+}
+
 // Create or update an extmark, marks are force to a valid position.
 // Returns 1 on new mark created
 // Returns 2 on succesful update
@@ -104,9 +172,13 @@ int extmark_set(buf_T *buf,
 
   ExtendedMark *extmark = extmark_from_id(buf, ns, id);
   if (!extmark) {
-    return extmark_create(buf, ns, id, lnum, col, op);
+    int rv =  extmark_create(buf, ns, id, lnum, col, op);
+    extmark_check(1);
+    return rv;
   } else {
+    extmark_check(1);
     extmark_update(extmark, buf, ns, id, lnum,  col, op, NULL);
+    extmark_check(1);
     return 2;
   }
 }
@@ -237,6 +309,7 @@ static void extmark_update(ExtendedMark *extmark,
   // Move the mark to a new line and update column
   if (old_line->lnum != lnum) {
     ExtMarkLine *ref_line = extline_ref(&buf->b_extlines, lnum);
+    extmark_check(1);
     extmark_put(col, id, ref_line, ns);
     // Update the hashmap
     ExtmarkNs *ns_obj = pmap_get(uint64_t)(buf->b_extmark_ns, ns);
@@ -244,8 +317,18 @@ static void extmark_update(ExtendedMark *extmark,
     // Delete old mark
     if (mitr != NULL) {
       kb_del_itr(markitems, &(old_line->items), mitr);
+      int res = extmark_check(1);
+      if (!res) {
+        int a = 1;
+      }
+      assert(res != 0);
     } else {
-      kb_del(markitems, &(old_line->items), *extmark);
+      kb_delp(markitems, &old_line->items, extmark);
+      int res = extmark_check(1);
+      if (!res) {
+        int a = 1;
+      }
+      assert(res != 0);
     }
   // Just update the column
   } else {
@@ -657,6 +740,9 @@ void extmark_apply_undo(ExtmarkUndoObject undo_info, bool undo)
     }
     extmark_col_adjust(curbuf,
                        lnum, mincol, lnum_amount, col_amount, kExtmarkNoUndo);
+    nsmark_check(2, 2, 3);
+    nsmark_check(3, 2, 3);
+    nsmark_check(4, 2, 6);
   // use extmark_col_adjust_delete
   } else if (undo_info.type == kColAdjustDelete) {
     if (undo) {
@@ -1028,16 +1114,17 @@ static bool _extmark_col_adjust(buf_T *buf, linenr_T lnum,
               &extline->items, &mitr)) {
         extmark = &((&mitr)->p->x->key)[(&mitr)->p->i];
         {
-          marks_exist = 1;
           cp = &(extmark->col);
           col_amount = (*calc_amount)(mincol, *cp, func_arg);
           if (col_amount == 0 && lnum_amount == 0) { continue; }
           if (col_amount < 0 && *cp <= (colnr_T) -col_amount && *cp > mincol) {
+            marks_exist = 1;
             extmark_update(extmark, buf, extmark->ns_id, extmark->mark_id,
                            extline->lnum + lnum_amount, BufPosStartCol,
                            kExtmarkNoUndo, &mitr);
           }
           else if (*cp >= mincol) {
+            marks_exist = 1;
             extmark_update(extmark, buf, extmark->ns_id, extmark->mark_id,
                            extline->lnum + lnum_amount,
                            *cp + (colnr_T) col_amount, kExtmarkNoUndo, &mitr);
@@ -1054,6 +1141,7 @@ static bool _extmark_col_adjust(buf_T *buf, linenr_T lnum,
 }
 
 // use _extmark_col_adjust to move columns by inserting
+// Doesn't take the eol into consideration (possible to put marks in invalid positions)
 void extmark_col_adjust(buf_T *buf, linenr_T lnum,
                         colnr_T mincol, long lnum_amount,
                         long col_amount, ExtmarkOp undo)
@@ -1066,9 +1154,11 @@ void extmark_col_adjust(buf_T *buf, linenr_T lnum,
   if (undo == kExtmarkUndo && marks_moved) {
     u_extmark_col_adjust(buf, lnum, mincol, lnum_amount, col_amount);
   }
+  extmark_check(1);
 }
 
 // Adjust marks by doing a delete on a line
+// Automatically readusts to take the eol into account
 // TODO(timeyyy): change mincol to be for the mark to be copied, not moved
 // mincol: First column that needs to be moved (start of delete range)
 // endcol: Last column which needs to be copied (end of delete range + 1)
@@ -1106,6 +1196,7 @@ void extmark_col_adjust_delete(buf_T *buf, linenr_T lnum,
   if (marks_moved && undo == kExtmarkUndo) {
     u_extmark_col_adjust_delete(buf, lnum, mincol, endcol);
   }
+  extmark_check(1);
 }
 
 // Adjust extmark row for inserted/deleted rows (columns stay fixed).
@@ -1134,42 +1225,61 @@ void extmark_adjust(buf_T *buf,
   int eol;
   bool marks_exist = false;
   linenr_T *lp;
-  FOR_ALL_EXTMARKLINES(buf, MINLNUM, MAXLNUM, {
-    marks_exist = true;
-    lp = &(extline->lnum);
-    if (*lp >= line1 && *lp <= line2) {
-      // 1st call with end_temp = true, store the lines in a temp position
-      if (end_temp && amount > 0) {
-        kb_del_itr(extlines, &buf->b_extlines, &itr);
-        kv_push(buf->b_extmark_move_space, extline);
+  kbitr_extlines_t itr;
+  ExtMarkLine t;
+  t.lnum = 1 == -1 ? 1 : 1;
+  if (!kb_itr_get_extlines(&buf->b_extlines, &t, &itr)) { kb_itr_next_extlines(&buf->b_extlines, &itr); }
+  ExtMarkLine *extline;
+  for (; ((&itr)->p >= (&itr)->stack); kb_itr_next_extlines(&buf->b_extlines, &itr)) {
+    extline = ((&itr)->p->x->key)[(&itr)->p->i];
+    if (extline->lnum > 0x7fffffff && 0x7fffffff != -1) { break; }
+    {
+      marks_exist = 1;
+      lp = &(extline->lnum);
+      if (*lp >= line1 && *lp <= line2) {
+        if (end_temp && amount > 0) {
+          kb_del_itr_extlines(&buf->b_extlines, &itr);
+          (*((((buf->b_extmark_move_space).size == (buf->b_extmark_move_space).capacity)
+              ? (((buf->b_extmark_move_space).capacity = ((buf->b_extmark_move_space).capacity ?
+                                                          (buf->b_extmark_move_space).capacity << 1
+                                                                                               : 8), (buf->b_extmark_move_space).items = xrealloc(
+                          (buf->b_extmark_move_space).items,
+                          sizeof((buf->b_extmark_move_space).items[0]) * (buf->b_extmark_move_space).capacity)), 0)
+              : 0), ((buf->b_extmark_move_space).items + ((buf->b_extmark_move_space).size++))) = (extline));
+        }
+        if (amount == 0x7fffffff) {
+          kbitr_markitems_t mitr;
+          ExtendedMark mt;
+          mt.ns_id = 0;
+          mt.mark_id = 0;
+          mt.line = ((void *) 0);
+          mt.col = 0;
+          if (!kb_itr_get_markitems(&extline->items, mt, &mitr)) { kb_itr_next_markitems(&extline->items, &mitr); }
+          ExtendedMark *extmark;
+          for (; ((&mitr)->p >= (&mitr)->stack); kb_itr_next_markitems(&extline->items, &mitr)) {
+            extmark = &((&mitr)->p->x->key)[(&mitr)->p->i];
+            {
+              eol = len_of_line_inclusive_white_space(buf, extline->lnum - 1) + 1;
+              extmark_copy_and_place(curbuf, extline->lnum, 1, extline->lnum, 0x7fffffff, extline->lnum - 1, eol,
+                                     kExtmarkUndo);
+              kb_del_itr_extlines(&buf->b_extlines, &itr);
+            };
+          }
+        }
+        else { *lp += amount; }
       }
-
-      // Delete the line
-      if (amount == MAXLNUM) {
-        FOR_ALL_EXTMARKS_IN_LINE(extline->items, {
-          eol = len_of_line_inclusive_white_space(buf, extline->lnum - 1) + 1;
-          extmark_copy_and_place(curbuf,
-                                 extline->lnum,
-                                 MINCOL,
-                                 extline->lnum,
-                                 MAXCOL,
-                                 extline->lnum - 1,
-                                 eol,
-                                 kExtmarkUndo);
-        })
-        // TODO(timeyyy): make freeing the line a undoable action
-        // see branch extmarks_broken_delete_lines
-      } else {
-        *lp += amount;
+      else if (amount_after && *lp > line2) {
+        extmark_check(1);
+        *lp += amount_after;
+        extmark_check(1);
       }
-    } else if (amount_after && *lp > line2) {
-      *lp += amount_after;
-    }
-  })
+    };
+  }
 
   if (undo == kExtmarkUndo && marks_exist) {
     u_extmark_adjust(buf, line1, line2, amount, amount_after);
   }
+  extmark_check(1);
 }
 
 // Range points to copy
@@ -1221,9 +1331,8 @@ void extmark_copy_and_place(buf_T *buf,
   if (marks_moved && undo == kExtmarkUndo) {
     u_extmark_copy_place(buf, l_lnum, l_col, u_lnum, u_col, p_lnum, p_col);
   }
+  extmark_check(1);
 }
-
-
 
 // Get reference to line in kbtree_t, allocating it if neccessary.
 ExtMarkLine *extline_ref(kbtree_t(extlines) *b, linenr_T lnum)
@@ -1247,8 +1356,7 @@ ExtMarkLine *extline_ref(kbtree_t(extlines) *b, linenr_T lnum)
 void extmark_put(colnr_T col,
                  uint64_t id,
                  ExtMarkLine *extline,
-                 uint64_t ns)
-{
+                 uint64_t ns) {
   ExtendedMark t;
   t.col = col;
   t.mark_id = id;
@@ -1257,6 +1365,10 @@ void extmark_put(colnr_T col,
 
   kbtree_t(markitems) *b = &(extline->items);
   // kb_put requries the key to not be there
+  if (kb_getp(markitems, b, &t)) {
+    int a = 1;
+  }
+
   assert(!kb_getp(markitems, b, &t));
 
   kb_put(markitems, b, t);
@@ -1277,3 +1389,4 @@ int mark_cmp(ExtendedMark a, ExtendedMark b)
   }
   return kb_generic_cmp(a.mark_id, b.mark_id);
 }
+

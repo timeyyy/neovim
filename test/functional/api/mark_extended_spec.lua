@@ -36,8 +36,10 @@ local function check_undo_redo(buf, ns, mark, sr, sc, er, ec) --s = start, e = e
 end
 
 local function check_undo(buf, ns, mark, sr, sc, er, ec) --s = start, e = end
-  feed("u")
   rv = buffer('lookup_mark', buf, ns, mark)
+  eq({mark, er, ec}, rv)
+  feed("u")
+  eq({mark, er, ec}, rv)
   eq(sr, rv[2])
   eq(sc, rv[3])
   -- feed("<c-r>")
@@ -1108,22 +1110,106 @@ describe('Extmarks buffer api', function()
     check_undo_redo(buf, ns, marks[3], 1, 5, 1, 9)
   end)
 
-  it('substitions over multiple lines with newline in pattern #extmarks', function()
+
+-- when < 0
+
+-- delete up to the newline on the pattern
+
+-- calc 1: col adjust oringal line up to the new line
+
+-- calc 2: col ajdust
+
+-- remove cols on the line if the pattern has stuff after the \n
+-- add cols the the len(line previous)
+
+-- calc 3: mark adjust (up to the correct position
+
+-- calc 4: mark adjust lines below
+
+
+-- when > 0
+
+  it('substitions over multiple lines with newline in pattern #tims1', function()
     feed('A<cr>67890<cr>xx<esc>')
     buffer('set_mark', buf, ns, marks[1], 1, 4)
     buffer('set_mark', buf, ns, marks[2], 1, 5)
     buffer('set_mark', buf, ns, marks[3], 2, 1)
     buffer('set_mark', buf, ns, marks[4], 2, 6)
     buffer('set_mark', buf, ns, marks[5], 3, 1)
-    feed([[:1,2s:5\n:5 <cr>]])
+
+    feed([[:1,2s:5\n67:X<cr>]])
     check_undo_redo(buf, ns, marks[1], 1, 4, 1, 4)
-    check_undo_redo(buf, ns, marks[2], 1, 5, 1, 12)
-    check_undo_redo(buf, ns, marks[3], 2, 1, 1, 12)
-    check_undo_redo(buf, ns, marks[4], 2, 6, 1, 12)
-    check_undo_redo(buf, ns, marks[5], 3, 1, 2, 1)
+    check_undo_redo(buf, ns, marks[2], 1, 5, 1, 5)
+    check_undo_redo(buf, ns, marks[3], 2, 1, 1, 5)
+    check_undo_redo(buf, ns, marks[4], 2, 6, 2, 6)
+    check_undo_redo(buf, ns, marks[5], 3, 1, 3, 1)
   end)
 
-  it('substitions over multiple lines with replace in substition #extmarks', function()
+  it('substitions over multiple lines with newline in pattern #tims2', function()
+    feed('A<cr>67890<cr>xx<esc>')
+    buffer('set_mark', buf, ns, marks[1], 1, 4)
+    buffer('set_mark', buf, ns, marks[2], 1, 5)
+    buffer('set_mark', buf, ns, marks[3], 2, 1)
+    buffer('set_mark', buf, ns, marks[4], 2, 6)
+    buffer('set_mark', buf, ns, marks[5], 3, 1)
+
+    feed([[:1,2s:5\n67:X<cr>]])
+    check_undo_redo(buf, ns, marks[1], 1, 4, 1, 4)
+    check_undo_redo(buf, ns, marks[2], 1, 5, 1, 5)
+    check_undo_redo(buf, ns, marks[3], 2, 1, 1, 5)
+    check_undo_redo(buf, ns, marks[4], 2, 6, 1, 8)
+    check_undo_redo(buf, ns, marks[5], 3, 1, 3, 1)
+  end)
+
+
+
+
+  it('substitions over multiple lines with newline in pattern #tim', function()
+    feed('A<cr>67890<cr>xx<esc>')
+    buffer('set_mark', buf, ns, marks[1], 1, 4)
+    buffer('set_mark', buf, ns, marks[2], 1, 5)
+    buffer('set_mark', buf, ns, marks[3], 2, 1)
+    buffer('set_mark', buf, ns, marks[4], 2, 6)
+    buffer('set_mark', buf, ns, marks[5], 3, 1)
+    -- feed([[:1,2s:5\n:5 <cr>]])
+    -- check_undo_redo(buf, ns, marks[1], 1, 4, 1, 4)
+    -- check_undo_redo(buf, ns, marks[2], 1, 5, 1, 5)
+    -- check_undo_redo(buf, ns, marks[5], 3, 1, 2, 1)
+
+    -- check_undo_redo(buf, ns, marks[1], 1, 4, 1, 4)
+    -- check_undo_redo(buf, ns, marks[2], 1, 5, 1, 12)
+    -- check_undo_redo(buf, ns, marks[3], 2, 1, 1, 12)
+    -- check_undo_redo(buf, ns, marks[4], 2, 6, 1, 12)
+    -- check_undo_redo(buf, ns, marks[5], 3, 1, 2, 1)
+    -- feed('u')
+    -- DAMNI it have to refactor again like crazy,
+    -- we need to move the bit after
+    -- buffer('set_mark', buf, ns, marks[6], 2, 3)
+    feed([[:1,2s:5\n67:X<cr>]])
+    check_undo(buf, ns, marks[1], 1, 4, 1, 4)
+    -- check_undo_redo(buf, ns, marks[2], 1, 5, 1, 6)
+    -- check_undo_redo(buf, ns, marks[3], 2, 1, 1, 6)
+    -- check_undo(buf, ns, marks[4], 2, 6, 1, 9)
+    -- check_undo_redo(buf, ns, marks[5], 3, 1, 2, 1)
+    -- check_undo_redo(buf, ns, marks[6], 2, 3, 1, 6)
+  end)
+
+  it('substitions with multiple newlines in pattern #fail', function()
+    feed('A<cr>67890<cr>xx<esc>')
+    buffer('set_mark', buf, ns, marks[1], 1, 5)
+    buffer('set_mark', buf, ns, marks[2], 1, 6)
+    buffer('set_mark', buf, ns, marks[3], 2, 1)
+    buffer('set_mark', buf, ns, marks[4], 2, 6)
+    buffer('set_mark', buf, ns, marks[5], 3, 1)
+    feed([[:1,2s:\n.*\n:X<cr>]])
+    check_undo_redo(buf, ns, marks[1], 1, 5, 1, 5)
+    check_undo_redo(buf, ns, marks[2], 1, 6, 1, 7)
+    check_undo_redo(buf, ns, marks[3], 2, 1, 1, 7)
+    check_undo_redo(buf, ns, marks[4], 2, 6, 1, 7)
+    check_undo_redo(buf, ns, marks[5], 3, 1, 1, 7)
+  end)
+
+  pending('substitions over multiple lines with replace in substition #fail', function()
     feed('A<cr>x3<cr>xx<esc>')
     buffer('set_mark', buf, ns, marks[1], 1, 2)
     buffer('set_mark', buf, ns, marks[2], 1, 3)
@@ -1141,7 +1227,7 @@ describe('Extmarks buffer api', function()
     check_undo_redo(buf, ns, marks[3], 1, 5, 2, 3)
   end)
 
-  it('using <c-a> when increase in order of magnitude #extmarks', function()
+  it('using <c-a> when increase in order of magnitude #tim', function()
     -- do_addsub in ops.c
     feed('ddi9 abc<esc>H')
     -- when going from 9 to 10, mark on 9 shouldn't move
