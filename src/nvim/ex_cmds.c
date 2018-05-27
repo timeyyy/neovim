@@ -3218,9 +3218,9 @@ static void extmark_move_regmatch_multi(ExtmarkSubObject s)
                            u_lnum, s.after_newline_in_pat,
                            s.lnum, mincol,
                            kExtmarkUndo);
-    nsmark_check(2, 1, 5);
-    nsmark_check(3, 1, 5);
-    nsmark_check(4, 2, 6);
+    nsmark_check(1, 1, 5);
+    nsmark_check(2, 1, 6);
+    nsmark_check(3, 1, 6);
 
     // 2. Move marks on last newline
     mincol = mincol - (colnr_T)s.before_newline_in_pat;
@@ -3230,27 +3230,34 @@ static void extmark_move_regmatch_multi(ExtmarkSubObject s)
                        -s.newline_in_pat,
                        mincol - s.after_newline_in_pat,
                        kExtmarkUndo);
-    nsmark_check(2, 1, 5);
-    nsmark_check(3, 1, 5);
-    nsmark_check(4, 1, 8);
+    nsmark_check(1, 1, 5);
+    nsmark_check(2, 1, 6);
+    nsmark_check(3, 1, 6);
 
     // Take care of the lines after
-//    extmark_adjust(curbuf,
-//                   u_lnum,
-//                   u_lnum,
-//                   MAXLNUM,
-//                   -s.newline_in_pat,
-//                   kExtmarkUndo,
-//                   false);
-//     -- Finish Delete Pattern --
-    // -- Insert Substitution --
-    // 1. first insert the text in the substitutaion
-//    extmark_col_adjust(curbuf,
-//                       s.lnum,
-//                       mincol + 1,
-//                       s.newline_in_sub,
-//                       s.after_newline_in_sub,
-//                       kExtmarkUndo);
+   extmark_adjust(curbuf,
+                  u_lnum,
+                  u_lnum,
+                  MAXLNUM,
+                  -s.newline_in_pat,
+                  kExtmarkUndo,
+                  false);
+    nsmark_check(1, 1, 5);
+    nsmark_check(2, 1, 6);
+    nsmark_check(3, 1, 6);
+
+   //  -- Finish Delete Pattern --
+   // -- Insert Substitution --
+   // 1. first insert the text in the substitutaion
+   extmark_col_adjust(curbuf,
+                      s.lnum,
+                      mincol + 1,
+                      s.newline_in_sub,
+                      s.after_newline_in_sub,
+                      kExtmarkUndo);
+    nsmark_check(1, 1, 5);
+    nsmark_check(2, 1, 7);
+    nsmark_check(3, 1, 7);
   } //else {
     // extmark_adjust(curbuf,
                    // u_lnum + lnum_added,

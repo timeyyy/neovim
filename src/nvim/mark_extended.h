@@ -148,13 +148,20 @@ static inline int __kb_getp_aux_markitems(const kbnode_markitems_t *__restrict x
   rr = r ? r : &tr;
   while (begin < end) {
     int mid = (begin + end) >> 1;
-    if ((mark_cmp(((x->key)[mid]), (*k))) < 0)begin = mid + 1; else end = mid;
+    if ((mark_cmp(((x->key)[mid]), (*k))) < 0) {
+      begin = mid + 1;
+    }
+    else {
+      end = mid;
+    }
   }
   if (begin == x->n) {
     *rr = 1;
     return x->n - 1;
   }
-  if ((*rr = (mark_cmp((*k), ((x->key)[begin])))) < 0)--begin;
+  if ((*rr = (mark_cmp((*k), ((x->key)[begin])))) < 0) {
+    --begin;
+  }
   return begin;
 }
 

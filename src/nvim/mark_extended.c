@@ -144,7 +144,6 @@ int extmark_check(int a) {
 int nsmark_check(uint64_t id,
                 linenr_T lnum,
                 colnr_T col) {
-  return 1;
   ExtendedMark *extmark = extmark_from_id(curbuf, 1, id);
   if (extmark->line->lnum != lnum) {
     int a = 1;
@@ -208,7 +207,7 @@ ExtmarkArray extmark_get(buf_T *buf,
                          linenr_T l_lnum,
                          colnr_T l_col,
                          linenr_T u_lnum,
-                         colnr_T u_col,
+                        colnr_T u_col,
                          int64_t amount,
                          int dir)
 {
@@ -323,7 +322,7 @@ static void extmark_update(ExtendedMark *extmark,
       }
       assert(res != 0);
     } else {
-      kb_delp(markitems, &old_line->items, extmark);
+      kb_del(markitems, &old_line->items, *extmark);
       int res = extmark_check(1);
       if (!res) {
         int a = 1;
@@ -332,7 +331,15 @@ static void extmark_update(ExtendedMark *extmark,
     }
   // Just update the column
   } else {
-    extmark->col = col;
+    if (mitr != NULL) {
+      // It didn't have to be this way, but the btree stays organized during our iterations
+      extmark->col = col;
+    }
+    else {
+      // Keep the btree in order
+      kb_del(markitems, &old_line->items, *extmark);
+      extmark_put(col, id, old_line, ns);
+    }
   }
 }
 
@@ -740,9 +747,9 @@ void extmark_apply_undo(ExtmarkUndoObject undo_info, bool undo)
     }
     extmark_col_adjust(curbuf,
                        lnum, mincol, lnum_amount, col_amount, kExtmarkNoUndo);
-    nsmark_check(2, 2, 3);
-    nsmark_check(3, 2, 3);
-    nsmark_check(4, 2, 6);
+    // nsmark_check(2, 2, 3);
+    // nsmark_check(3, 2, 3);
+    // nsmark_check(4, 2, 6);
   // use extmark_col_adjust_delete
   } else if (undo_info.type == kColAdjustDelete) {
     if (undo) {
