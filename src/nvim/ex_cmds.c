@@ -3205,11 +3205,11 @@ static void extmark_move_regmatch_multi(ExtmarkSubObject s)
   linenr_T n_u_lnum = s.lnum + s.endpos.lnum - s.startpos.lnum;
   linenr_T n_newline_in_pat = n_u_lnum - s.lnum;
   long n_after_newline_in_pat = s.endpos.col;
-  long n_before_newline_in_pat = s.startpos.col + 1;
   // long n_before_newline_in_pat = s.cm_start.col + 1;
 
   colnr_T final; // what n_before_newline_in_pat is used to calculate
   mincol = s.startpos.col + 1;
+  long n_before_newline_in_pat =  mincol - s.cm_start.col;
   final = mincol - (colnr_T)s.before_newline_in_pat - (colnr_T)s.after_newline_in_pat;
 //  assert(s.after_newline_in_pat == s.endpos.col);
 
@@ -3221,11 +3221,11 @@ static void extmark_move_regmatch_multi(ExtmarkSubObject s)
     // -- Delete Pattern --
     // 1. Move marks in the pattern
     mincol = s.startpos.col + 1;
-    u_lnum = s.lnum + s.newline_in_pat;
+    u_lnum = n_u_lnum;
     assert(n_u_lnum == u_lnum);
     extmark_copy_and_place(curbuf,
                            s.lnum, mincol,
-                           u_lnum, s.after_newline_in_pat,
+                           u_lnum, n_after_newline_in_pat,
                            s.lnum, mincol,
                            kExtmarkUndo);
     nsmark_check(1, 1, 5);
@@ -3233,12 +3233,12 @@ static void extmark_move_regmatch_multi(ExtmarkSubObject s)
     nsmark_check(3, 1, 6);
 
     // 2. Move marks on last newline
-    mincol = mincol - (colnr_T)s.before_newline_in_pat;
+    mincol = mincol - (colnr_T)n_before_newline_in_pat;
     extmark_col_adjust(curbuf,
                        u_lnum,
-                       (colnr_T)(s.after_newline_in_pat + 1),
+                       (colnr_T)(n_after_newline_in_pat + 1),
                        -s.newline_in_pat,
-                       mincol - s.after_newline_in_pat,
+                       mincol - n_after_newline_in_pat,
                        kExtmarkUndo);
     nsmark_check(1, 1, 5);
     nsmark_check(2, 1, 6);
@@ -3259,12 +3259,12 @@ static void extmark_move_regmatch_multi(ExtmarkSubObject s)
    //  -- Finish Delete Pattern --
    // -- Insert Substitution --
    // 1. first insert the text in the substitutaion
-   // extmark_col_adjust(curbuf,
-                      // s.lnum,
-                      // mincol + 1,
-                      // s.newline_in_sub,
-                      // s.after_newline_in_sub,
-                      // kExtmarkUndo);
+    extmark_col_adjust(curbuf,
+                       s.lnum,
+                       mincol + 1,
+                       s.newline_in_sub,
+                       s.after_newline_in_sub,
+                       kExtmarkUndo);
     nsmark_check(1, 1, 5);
     nsmark_check(2, 1, 7);
     nsmark_check(3, 1, 7);
