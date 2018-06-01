@@ -144,6 +144,7 @@ int extmark_check(int a) {
 int nsmark_check(uint64_t id,
                 linenr_T lnum,
                 colnr_T col) {
+  return 1;
   ExtendedMark *extmark = extmark_from_id(curbuf, 1, id);
   if (extmark->line->lnum != lnum) {
     int a = 1;
@@ -747,9 +748,6 @@ void extmark_apply_undo(ExtmarkUndoObject undo_info, bool undo)
     }
     extmark_col_adjust(curbuf,
                        lnum, mincol, lnum_amount, col_amount, kExtmarkNoUndo);
-    // nsmark_check(2, 2, 3);
-    // nsmark_check(3, 2, 3);
-    // nsmark_check(4, 2, 6);
   // use extmark_col_adjust_delete
   } else if (undo_info.type == kColAdjustDelete) {
     if (undo) {
