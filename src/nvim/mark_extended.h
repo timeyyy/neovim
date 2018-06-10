@@ -499,6 +499,7 @@ typedef struct {
     linenr_T lnum;
     colnr_T mincol;
     colnr_T endcol;
+    int eol;
 } ColAdjustDelete;
 
 typedef struct {

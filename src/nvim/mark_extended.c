@@ -592,7 +592,8 @@ void u_extmark_col_adjust(buf_T *buf,
 void u_extmark_col_adjust_delete(buf_T *buf,
                                  linenr_T lnum,
                                  colnr_T mincol,
-                                 colnr_T endcol)
+                                 colnr_T endcol,
+                                 int eol)
 {
   u_header_T  *uhp = force_get_undo_header(buf);
   if (!uhp) {
@@ -603,6 +604,7 @@ void u_extmark_col_adjust_delete(buf_T *buf,
   col_adjust_delete.lnum = lnum;
   col_adjust_delete.mincol = mincol;
   col_adjust_delete.endcol = endcol;
+  col_adjust_delete.eol = eol;
 
   ExtmarkUndoObject undo = { .type = kColAdjustDelete,
                              .data.col_adjust_delete = col_adjust_delete };
@@ -767,7 +769,7 @@ void extmark_apply_undo(ExtmarkUndoObject undo_info, bool undo)
                                 undo_info.data.col_adjust_delete.mincol,
                                 undo_info.data.col_adjust_delete.endcol,
                                 kExtmarkNoUndo,
-                                0);
+                                undo_info.data.col_adjust_delete.eol);
     }
   // use extmark_adjust
   } else if (undo_info.type == kLineAdjust) {
@@ -1208,11 +1210,15 @@ void extmark_col_adjust_delete(buf_T *buf, linenr_T lnum,
                    extline->lnum, (colnr_T)eol, kExtmarkNoUndo, &mitr);
   })
 
-    u_extmark_copy_place(buf, l_lnum, l_col, u_lnum, u_col, p_lnum, p_col);
+  // TODO
+  // Enable Undo/Redo for the marks that were floating beyond the eol
+  // if (undo == kExtmarkUndo) {
+    // u_extmark_copy(buf, lnum, eol, lnum, -1);
+  // }
 
   // Record the undo for the actual move
   if (marks_moved && undo == kExtmarkUndo) {
-    u_extmark_col_adjust_delete(buf, lnum, mincol, endcol);
+    u_extmark_col_adjust_delete(buf, lnum, mincol, endcol, eol);
   }
   extmark_check(1);
 }

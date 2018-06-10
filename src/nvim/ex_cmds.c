@@ -3284,7 +3284,7 @@ static void extmark_move_regmatch_multi(ExtmarkSubObject s, int i)
                               a_l_lnum,
                               mincol + 1,
                               s.endpos.col + 1,
-                              kExtmarkNoUndo,
+                              kExtmarkUndo,
                               s.eol);
    }
 
