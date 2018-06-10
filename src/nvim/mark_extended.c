@@ -766,7 +766,8 @@ void extmark_apply_undo(ExtmarkUndoObject undo_info, bool undo)
                                 undo_info.data.col_adjust_delete.lnum,
                                 undo_info.data.col_adjust_delete.mincol,
                                 undo_info.data.col_adjust_delete.endcol,
-                                kExtmarkNoUndo);
+                                kExtmarkNoUndo,
+                                0);
     }
   // use extmark_adjust
   } else if (undo_info.type == kLineAdjust) {
@@ -1014,6 +1015,11 @@ int len_of_line_inclusive_white_space(buf_T *buf, linenr_T lnum)
   return len;
 }
 
+int eol_of_line(buf_T *buf, linenr_T lnum) {
+  return len_of_line_inclusive_white_space(buf, lnum) + 1;
+}
+
+
 // original kb_itr_get as exists in upstream klib
 // just modified the return arguments to 0 and 1 instaed of -1 and 0
 static inline int debug_original_get(kbtree_markitems_t *b, ExtendedMark * __restrict k, kbitr_markitems_t *itr)
@@ -1169,7 +1175,7 @@ void extmark_col_adjust(buf_T *buf, linenr_T lnum,
 // endcol: Last column which needs to be copied (end of delete range + 1)
 void extmark_col_adjust_delete(buf_T *buf, linenr_T lnum,
                                colnr_T mincol, colnr_T endcol,
-                               ExtmarkOp undo)
+                               ExtmarkOp undo, int _eol)
 {
   colnr_T start_effected_range = mincol;
 // assert(start_effected_range <= endcol);
@@ -1191,11 +1197,18 @@ void extmark_col_adjust_delete(buf_T *buf, linenr_T lnum,
   // Deletes at the end of the line have different behaviour than the normal
   // case when deleted.
   // Cleanup any marks that are floating beyond the end of line.
-  int eol = len_of_line_inclusive_white_space(buf, lnum) + 1;
+  // we allow this to be passed in as well because the buffer may have already been
+  // mutated.
+  int eol = _eol;
+  if (!eol) {
+    eol = eol_of_line(buf, lnum);
+  }
   FOR_ALL_EXTMARKS(buf, STARTING_NAMESPACE, lnum, eol, lnum, -1, {
     extmark_update(extmark, buf, extmark->ns_id, extmark->mark_id,
                    extline->lnum, (colnr_T)eol, kExtmarkNoUndo, &mitr);
   })
+
+    u_extmark_copy_place(buf, l_lnum, l_col, u_lnum, u_col, p_lnum, p_col);
 
   // Record the undo for the actual move
   if (marks_moved && undo == kExtmarkUndo) {
@@ -1264,7 +1277,7 @@ void extmark_adjust(buf_T *buf,
           for (; ((&mitr)->p >= (&mitr)->stack); kb_itr_next_markitems(&extline->items, &mitr)) {
             extmark = &((&mitr)->p->x->key)[(&mitr)->p->i];
             {
-              eol = len_of_line_inclusive_white_space(buf, extline->lnum - 1) + 1;
+              eol = eol_of_line(buf, extline->lnum - 1);
               extmark_copy_and_place(curbuf, extline->lnum, 1, extline->lnum, 0x7fffffff, extline->lnum - 1, eol,
                                      kExtmarkUndo);
               kb_del_itr_extlines(&buf->b_extlines, &itr);

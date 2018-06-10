@@ -1637,7 +1637,7 @@ setmarks:
     endcol = bd.end_vcol + 1;
     for (lnum = curwin->w_cursor.lnum; lnum <= oap->end.lnum; lnum++) {
       extmark_col_adjust_delete(curbuf, lnum, mincol, endcol,
-                                kExtmarkUndo);
+                                kExtmarkUndo, 0);
     }
 
   // Delete characters within one line,
@@ -1655,7 +1655,7 @@ setmarks:
         endcol=mincol;
       }
     }
-    extmark_col_adjust_delete(curbuf, lnum, mincol, endcol, kExtmarkUndo);
+    extmark_col_adjust_delete(curbuf, lnum, mincol, endcol, kExtmarkUndo, 0);
   }
   return OK;
 }

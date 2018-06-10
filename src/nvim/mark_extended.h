@@ -592,6 +592,7 @@ typedef struct {
   long lnum_added;
   lpos_T cm_start;  // start of the match
   lpos_T cm_end;    // end of the match
+  int eol;    // end of the match
 } ExtmarkSubObject;
 
 typedef kvec_t(ExtmarkSubObject) extmark_sub_vec_t;
