@@ -3316,6 +3316,11 @@ static void extmark_move_regmatch_multi(ExtmarkSubObject s, int i)
                  false);
   nsmark_check(5, 4, 1);
 
+  // 3. Insert
+  extmark_col_adjust(curbuf, a_l_lnum, mincol, s.newline_in_sub,
+                     (long)-mincol + 1,
+                     kExtmarkUndo);
+
   // again if newline in pat have to take that into account...
    // if (n_newline_in_pat == 0) {
      // extmark_col_adjust(curbuf,
