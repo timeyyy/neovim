@@ -3217,6 +3217,10 @@ static void extmark_move_regmatch_multi(ExtmarkSubObject s, int i)
 //  assert(n_before_newline_in_pat == s.before_newline_in_pat);
   assert(s.newline_in_pat == n_newline_in_pat);
 
+  // assert(s.after_newline_in_sub == s.cm_end.col);
+   long n_after_newline_in_sub = s.sublen - s.cm_start.col;
+//   assert(s.after_newline_in_sub == n_after_newline_in_sub);
+
   if (s.lnum_added < 0) {
     // -- Delete Pattern --
     // 1. Move marks in the pattern
@@ -3277,6 +3281,7 @@ static void extmark_move_regmatch_multi(ExtmarkSubObject s, int i)
    mincol = s.startpos.col + 1;
    u_lnum = n_u_lnum;
 
+
    // no newline in pat
    if (n_newline_in_pat == 0) {
      // THis IS PRobablY FUCKED..
@@ -3314,12 +3319,25 @@ static void extmark_move_regmatch_multi(ExtmarkSubObject s, int i)
                  0,
                  kExtmarkUndo,
                  false);
+  nsmark_check(1, 1, 2);
+  nsmark_check(2, 1, 3);
+  nsmark_check(3, 1, 4);
   nsmark_check(5, 4, 1);
 
+  // TODO ater_newline_in_sub and s.newline_in_sub newed to be correct... fml
+    // TODO sublen is also not correct here fml
+
   // 3. Insert
-  extmark_col_adjust(curbuf, a_l_lnum, mincol, s.newline_in_sub,
-                     (long)-mincol + 1,
+  extmark_col_adjust(curbuf,
+                     a_l_lnum,
+                     mincol,
+                     s.newline_in_sub,
+                     (long)-mincol + 1 + n_after_newline_in_sub,
                      kExtmarkUndo);
+    nsmark_check(1, 1, 2);
+    nsmark_check(2, 2, 2);
+    nsmark_check(3, 1, 4);
+    nsmark_check(5, 4, 1);
 
   // again if newline in pat have to take that into account...
    // if (n_newline_in_pat == 0) {
@@ -3327,7 +3345,7 @@ static void extmark_move_regmatch_multi(ExtmarkSubObject s, int i)
                         // a_u_lnum,
                         // mincol + 1,
                         // s.newline_in_sub,
-                        // s.after_newline_in_sub,
+                        // n_after_newline_in_sub,
                         // kExtmarkUndo);
    // }
 
