@@ -1111,73 +1111,6 @@ describe('Extmarks buffer api', function()
     check_undo_redo(buf, ns, marks[3], 1, 5, 1, 9)
   end)
 
-
--- when < 0
-
--- delete up to the newline on the pattern
-
--- calc 1: col adjust oringal line up to the new line
-
--- calc 2: col ajdust
-
--- remove cols on the line if the pattern has stuff after the \n
--- add cols the the len(line previous)
-
--- calc 3: mark adjust (up to the correct position
-
--- calc 4: mark adjust lines below
-
-
--- when > 0
-
-  it('substitions over multiple lines with newline in pattern #tims1', function()
-    feed('A<cr>67890<cr>xx<esc>')
-    buffer('set_mark', buf, ns, marks[1], 1, 4)
-    buffer('set_mark', buf, ns, marks[2], 1, 5)
-    buffer('set_mark', buf, ns, marks[3], 2, 1)
-    buffer('set_mark', buf, ns, marks[4], 2, 6)
-    buffer('set_mark', buf, ns, marks[5], 3, 1)
-
-    feed([[:1,2s:5\n67:X<cr>]])
-    check_undo_redo(buf, ns, marks[1], 1, 4, 1, 4)
-    check_undo_redo(buf, ns, marks[2], 1, 5, 1, 5)
-    check_undo_redo(buf, ns, marks[3], 2, 1, 1, 5)
-    check_undo_redo(buf, ns, marks[4], 2, 6, 2, 6)
-    check_undo_redo(buf, ns, marks[5], 3, 1, 3, 1)
-  end)
-
-  it('substitions over multiple lines with newline in pattern #tims2', function()
-    feed('A<cr>67890<cr>xx<esc>')
-    buffer('set_mark', buf, ns, marks[1], 1, 4)
-    buffer('set_mark', buf, ns, marks[2], 1, 5)
-    buffer('set_mark', buf, ns, marks[3], 2, 1)
-    buffer('set_mark', buf, ns, marks[4], 2, 6)
-    buffer('set_mark', buf, ns, marks[5], 3, 1)
-
-    feed([[:1,2s:5\n67:X<cr>]])
-    check_undo_redo(buf, ns, marks[1], 1, 4, 1, 4)
-    check_undo_redo(buf, ns, marks[2], 1, 5, 1, 5)
-    check_undo_redo(buf, ns, marks[3], 2, 1, 1, 5)
-    check_undo_redo(buf, ns, marks[4], 2, 6, 1, 8)
-    check_undo_redo(buf, ns, marks[5], 3, 1, 3, 1)
-  end)
-
-  it('substitions over multiple lines with newline in pattern #tims3', function()
-    feed('A<cr>67890<cr>xx<esc>')
-    buffer('set_mark', buf, ns, marks[1], 1, 4)
-    buffer('set_mark', buf, ns, marks[2], 1, 5)
-    buffer('set_mark', buf, ns, marks[3], 2, 1)
-    buffer('set_mark', buf, ns, marks[4], 2, 6)
-    buffer('set_mark', buf, ns, marks[5], 3, 1)
-
-    feed([[:1,2s:5\n67:X<cr>]])
-    check_undo_redo(buf, ns, marks[1], 1, 4, 1, 4)
-    check_undo_redo(buf, ns, marks[2], 1, 5, 1, 5)
-    check_undo_redo(buf, ns, marks[3], 2, 1, 1, 5)
-    check_undo_redo(buf, ns, marks[4], 2, 6, 1, 8)
-    check_undo_redo(buf, ns, marks[5], 3, 1, 2, 1)
-  end)
-
   it('substitions over multiple lines with newline in pattern #extmarks2', function()
     feed('A<cr>67890<cr>xx<esc>')
     buffer('set_mark', buf, ns, marks[1], 1, 4)
@@ -1227,20 +1160,6 @@ describe('Extmarks buffer api', function()
     check_undo_redo(buf, ns, marks[5], 3, 1, 1, 7)
   end)
 
-  it('substitions over multiple lines with replace in substition #p1fail', function()
-    feed('A<cr>67890<cr>xx<esc>')
-    buffer('set_mark', buf, ns, marks[1], 1, 2)
-    buffer('set_mark', buf, ns, marks[2], 1, 3)
-    buffer('set_mark', buf, ns, marks[3], 1, 5)
-    buffer('set_mark', buf, ns, marks[4], 2, 1)
-    buffer('set_mark', buf, ns, marks[5], 3, 1)
-    feed([[:1,2s:3:\r<cr>]])
-    check_undo_redo(buf, ns, marks[1], 1, 2, 1, 2)
-    check_undo_redo(buf, ns, marks[2], 1, 3, 1, 3)
-    check_undo_redo(buf, ns, marks[3], 1, 5, 1, 4)
-    check_undo_redo(buf, ns, marks[4], 2, 1, 3, 1)
-    check_undo_redo(buf, ns, marks[5], 3, 1, 4, 1)
-  end)
   it('substitions over multiple lines with replace in substition #extmarks2', function()
     feed('A<cr>67890<cr>xx<esc>')
     buffer('set_mark', buf, ns, marks[1], 1, 2)
@@ -1265,8 +1184,6 @@ describe('Extmarks buffer api', function()
     buffer('set_mark', buf, ns, marks[2], 2, 2)
     buffer('set_mark', buf, ns, marks[3], 2, 3)
     feed([[:2,2s:3:\r<cr>]])
-
-    -- at the end should be...
     check_undo_redo(buf, ns, marks[1], 2, 1, 2, 1)
     check_undo_redo(buf, ns, marks[2], 2, 2, 3, 1)
     check_undo_redo(buf, ns, marks[3], 2, 3, 3, 1)

@@ -3237,9 +3237,11 @@ static void extmark_move_regmatch_multi(ExtmarkSubObject s, int i)
                            u_lnum, n_after_newline_in_pat,
                            s.lnum, mincol,
                            kExtmarkUndo);
-    nsmark_check(1, 1, 5, doit);
-    nsmark_check(2, 1, 6, doit);
-    nsmark_check(3, 1, 6, doit);
+    nsmark_check(1, 1, 4, doit);
+    nsmark_check(2, 1, 5, doit);
+    nsmark_check(3, 1, 5, doit);
+    nsmark_check(4, 2, 6, doit);
+    nsmark_check(5, 3, 1, doit);
 
     // 2. Move marks on last newline
     mincol = mincol - (colnr_T)n_before_newline_in_pat;
@@ -3249,6 +3251,11 @@ static void extmark_move_regmatch_multi(ExtmarkSubObject s, int i)
                        -s.newline_in_pat,
                        mincol - n_after_newline_in_pat,
                        kExtmarkUndo);
+    nsmark_check(1, 1, 4, doit);
+    nsmark_check(2, 1, 5, doit);
+    nsmark_check(3, 1, 5, doit);
+    nsmark_check(4, 2, 6, doit);
+    nsmark_check(5, 3, 1, doit);
 
     // Take care of the lines after
    extmark_adjust(curbuf,
