@@ -3201,6 +3201,10 @@ static void extmark_move_regmatch_multi(ExtmarkSubObject s, int i)
   colnr_T endcol;
   colnr_T col_amount;
   linenr_T u_lnum;
+  bool doit=false;
+//  if (i == 1) {
+//    doit=true;
+//  }
 
   linenr_T n_u_lnum = s.lnum + s.endpos.lnum - s.startpos.lnum;
   linenr_T n_newline_in_pat = n_u_lnum - s.lnum;
@@ -3218,7 +3222,8 @@ static void extmark_move_regmatch_multi(ExtmarkSubObject s, int i)
   assert(s.newline_in_pat == n_newline_in_pat);
 
   // assert(s.after_newline_in_sub == s.cm_end.col);
-   long n_after_newline_in_sub = s.sublen - s.cm_start.col;
+  // TODO: This should mostly work, what about for backrefs?
+   long n_after_newline_in_sub = s.after_newline_in_sub;
 //   assert(s.after_newline_in_sub == n_after_newline_in_sub);
 
   if (s.lnum_added < 0) {
@@ -3232,9 +3237,9 @@ static void extmark_move_regmatch_multi(ExtmarkSubObject s, int i)
                            u_lnum, n_after_newline_in_pat,
                            s.lnum, mincol,
                            kExtmarkUndo);
-    nsmark_check(1, 1, 5);
-    nsmark_check(2, 1, 6);
-    nsmark_check(3, 1, 6);
+    nsmark_check(1, 1, 5, doit);
+    nsmark_check(2, 1, 6, doit);
+    nsmark_check(3, 1, 6, doit);
 
     // 2. Move marks on last newline
     mincol = mincol - (colnr_T)n_before_newline_in_pat;
@@ -3301,9 +3306,9 @@ static void extmark_move_regmatch_multi(ExtmarkSubObject s, int i)
 //                           a_l_lnum, mincol,
 //                           kExtmarkUndo);
 
-    nsmark_check(1, 1, 2);
-    nsmark_check(2, 1, 3);
-    nsmark_check(3, 1, 4);
+    nsmark_check(1, 2, 1, doit);
+    nsmark_check(2, 2, 2, doit);
+    nsmark_check(3, 2, 2, doit);
 
 //
    // Move the lines after down
@@ -3319,13 +3324,15 @@ static void extmark_move_regmatch_multi(ExtmarkSubObject s, int i)
                  0,
                  kExtmarkUndo,
                  false);
-  nsmark_check(1, 1, 2);
-  nsmark_check(2, 1, 3);
-  nsmark_check(3, 1, 4);
-  nsmark_check(5, 4, 1);
+  nsmark_check(1, 2, 1, doit);
+  nsmark_check(2, 2, 2, doit);
+  nsmark_check(3, 2, 2, doit);
+  nsmark_check(5, 4, 1, doit);
 
   // TODO ater_newline_in_sub and s.newline_in_sub newed to be correct... fml
     // TODO sublen is also not correct here fml
+
+    // n afte nwiline in sub is wrong! fjdslfjdalsfjsa
 
   // 3. Insert
   extmark_col_adjust(curbuf,
@@ -3334,10 +3341,10 @@ static void extmark_move_regmatch_multi(ExtmarkSubObject s, int i)
                      s.newline_in_sub,
                      (long)-mincol + 1 + n_after_newline_in_sub,
                      kExtmarkUndo);
-    nsmark_check(1, 1, 2);
-    nsmark_check(2, 2, 2);
-    nsmark_check(3, 1, 4);
-    nsmark_check(5, 4, 1);
+    nsmark_check(1, 2, 1, doit);
+    nsmark_check(2, 3, 1, doit);
+    nsmark_check(3, 3, 1, doit);
+    nsmark_check(5, 4, 1, doit);
 
   // again if newline in pat have to take that into account...
    // if (n_newline_in_pat == 0) {

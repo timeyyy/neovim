@@ -143,8 +143,12 @@ int extmark_check(int a) {
 
 int nsmark_check(uint64_t id,
                 linenr_T lnum,
-                colnr_T col) {
-  return 1;
+                colnr_T col,
+                bool doit) {
+  if (!doit) {
+    return 1;
+  }
+
   ExtendedMark *extmark = extmark_from_id(curbuf, 1, id);
   if (extmark->line->lnum != lnum) {
     int a = 1;
